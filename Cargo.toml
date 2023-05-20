@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 extendr-api = "0.4.0"
 extendr-engine = "0.4.0"
+libR-sys = "0.4.0"
+rand = "0.8.5"
 reqwest = { version = "0.11.18", features = ["blocking"] }
