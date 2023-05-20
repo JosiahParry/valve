@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+axum = { version = "*" }
 extendr-api = "0.4.0"
 extendr-engine = "0.4.0"
 libR-sys = "0.4.0"
 rand = "0.8.5"
-reqwest = { version = "0.11.18", features = ["blocking"] }
+# reqwest = { version = "0.11.18", features = ["blocking"] }
+tokio = { version = "1.28.1", features = ["full", "macros", "rt-multi-thread"] }

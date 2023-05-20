@@ -1,13 +1,20 @@
 use std::thread;
+use axum::response::Redirect;
 //use extendr_engine::*;
 //use extendr_api::prelude::*;
-use reqwest::blocking::Client;
+//use reqwest::blocking::Client;
+
 
 use std::sync::{Arc, Mutex};
 use std::process::{ Stdio};
 use std::process::Command;
 
-fn main() {
+use axum::{
+    routing::get,
+};
+
+#[tokio::main]
+async fn main() {
 
     // specify the number of Plumber APIs to spawn
     let num_threads = 5;
@@ -33,25 +40,38 @@ fn main() {
     let ports_data = ports.lock().unwrap();
     println!("Spawned ports: {:?}", *ports_data);
 
-    for port in ports_data.iter() {
-        //format a simple request string
-        println!("http://127.0.0.1:{port}/__docs__/");
-        let url = format!("http://127.0.0.1:{}/echo?msg=hello-extendr from port no. {}", port, port);
-         
-         // spawn the client and send the request
-         let client = Client::new();
-         let resp = client.get(url).send().unwrap();
-         
-         println!("\n{}\n", resp.text().unwrap());
-         println!("R has been terminated");
 
-    }
+    let first_port = ports_data[0];
+
+    // Create the Axum application
+    let app = axum::Router::new()
+        .route("/", get(root))
+        .route("/__docs__", get(move || {
+            // Clone the first_port value
+            let cloned_first_port = first_port.clone();
+            async move {
+                // Create the docs path using the cloned value
+                let doc_path = format!("http://127.0.0.1:{}/__docs__/", cloned_first_port);
+                Redirect::to(doc_path.as_str())
+            }
+        }))
+        ;
     
-    thread::sleep(core::time::Duration::from_secs(30));
+
+    // Start the Axum server
+    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 
 }
 
 
+async fn root() -> &'static str {
+    "Hello, World!"
+}
+
+// function to get the 
 
 
 fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
@@ -66,20 +86,17 @@ fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
         .expect("Failed to start R process");
 }
 
-// fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
-//     start_r();
-//     ports.lock().unwrap().push(port);
-//     //let r_home = std::env::var("R_HOME").unwrap(); 
-//     //println!("R_HOME {r_home}");
-//     // Define R code to spawn the plumber API
-//     let plumb_call = format!(r#"plumber::pr_run(plumber::plumb("plumber.R"), port = {})"#, &port);
-//     // spawn the API
-//     let _plumb_spawn = eval_string(plumb_call.as_str());
-// }
+
+fn get_random_plumber_port(ports: Arc<Mutex<Vec<u16>>>) -> u16 {
+    let mut rng = rand::thread_rng();
+    let ports_data = ports.lock().unwrap();
+    let index = rng.gen_range(0..ports_data.len());
+    ports_data[index]
+}
 
 
 // from chatGPT
-// these functions generate random ports that are available
+// these functions generate random 
 use rand::Rng;
 use std::net::{TcpListener};
 
@@ -103,3 +120,34 @@ fn is_port_available(port: u16) -> bool {
         Err(_) => false, // The port is not available
     }
 }
+
+
+
+
+// This approach does not work because eval_string / R! block the thread
+// need a "detached child process"
+// fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
+//     start_r();
+//     ports.lock().unwrap().push(port);
+//     //let r_home = std::env::var("R_HOME").unwrap(); 
+//     //println!("R_HOME {r_home}");
+//     // Define R code to spawn the plumber API
+//     let plumb_call = format!(r#"plumber::pr_run(plumber::plumb("plumber.R"), port = {})"#, &port);
+//     // spawn the API
+//     let _plumb_spawn = eval_string(plumb_call.as_str());
+// }
+
+
+    // for port in ports_data.iter() {
+    //     //format a simple request string
+    //     println!("http://127.0.0.1:{port}/__docs__/");
+    //     let url = format!("http://127.0.0.1:{}/echo?msg=hello-extendr from port no. {}", port, port);
+         
+    //      // spawn the client and send the request
+    //      let client = Client::new();
+    //      let resp = client.get(url).send().unwrap();
+         
+    //      println!("\n{}\n", resp.text().unwrap());
+    //      println!("R has been terminated");
+
+    // }
