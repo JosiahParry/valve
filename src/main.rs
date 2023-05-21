@@ -38,11 +38,12 @@ async fn main() {
     thread::sleep(core::time::Duration::from_secs(2));
 
     // Access the ports data
-    let ports_data = ports.lock().unwrap();
-    println!("Spawned ports: {:?}", *ports_data);
+    let ports_data = ports.lock().unwrap().clone();
+    println!("Spawned ports: {:?}", ports_data);
 
-
+    // first port will be used to host docs
     let first_port = ports_data[0];
+
 
     // Create the Axum application
     let app = axum::Router::new()
@@ -60,11 +61,12 @@ async fn main() {
         // }))
         .route("/*key", get( move |req: Request<Body>| {
 
-            let port = first_port.clone();
+            // grab random port
+            //let pts = ports.lock().unwrap();
+            let port = get_random_plumber_port(&ports.lock().unwrap());
 
             async move {
                 
-
                 let ruri = req.uri();
                 let mut uri = ruri.clone().into_parts();
                 uri.authority = Some(format!("127.0.0.1:{port}").as_str().parse().unwrap());
@@ -135,8 +137,9 @@ fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
         .expect("Failed to start R process");
 }
 
+use std::sync::MutexGuard;
 // gets a single port number from available plumber ports
-fn get_random_plumber_port(ports: Vec<u16>) -> u16 {
+fn get_random_plumber_port(ports: &MutexGuard<Vec<u16>>) -> u16 {
     let mut rng = rand::thread_rng();
     //let ports_data = ports.lock().unwrap();
     let index = rng.gen_range(0..ports.len());
