@@ -11,6 +11,7 @@ use std::process::Command;
 
 use axum::{
     routing::get,
+    body::Body
 };
 
 #[tokio::main]
@@ -45,7 +46,6 @@ async fn main() {
 
     // Create the Axum application
     let app = axum::Router::new()
-        .route("/", get(root))
         .route("/__docs__", get(move || {
             // Clone the first_port value
             let cloned_first_port = first_port.clone();
@@ -55,8 +55,30 @@ async fn main() {
                 Redirect::to(doc_path.as_str())
             }
         }))
-        ;
+        // .route("/*key", get(|| async {
+        //     Redirect::to("/__docs__")
+        // }))
+        .route("/*key", get( move |req: Request<Body>| {
+
+            let port = first_port.clone();
+
+            async move {
+                
+
+                let ruri = req.uri();
+                let mut uri = ruri.clone().into_parts();
+                uri.authority = Some(format!("127.0.0.1:{port}").as_str().parse().unwrap());
+                uri.scheme = Some("http".parse().unwrap());
+                println!("{:?}", uri);
+                let new_uri = Uri::from_parts(uri).unwrap().to_string();
+                //format!("{:?}", uri);
+                
+                Redirect::temporary(new_uri.as_str()) 
     
+            }
+        }))
+        ;
+
 
     // Start the Axum server
     axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
@@ -66,14 +88,41 @@ async fn main() {
 
 }
 
+use axum::{
+    handler::{Handler},
+    http::{Request, Response},
+    Router,
+};
 
-async fn root() -> &'static str {
-    "Hello, World!"
+use hyper::client::HttpConnector;
+use hyper::Client;
+use hyper::Uri;
+
+async fn redirect_handler(req: Request<hyper::Body>) -> Result<Response<hyper::Body>, axum::Error> {
+    // Modify the request URI to the desired target
+    let target_uri = format!("http://127.0.0.1:8000{}", req.uri().path_and_query().unwrap());
+
+    // Parse the target URI
+    let target_uri: Uri = target_uri.parse().unwrap();
+
+    // Create a new hyper client
+    let client = Client::new();
+
+    // Create a new request with the modified URI
+    let redirected_req = hyper::Request::builder()
+        .method(req.method().clone())
+        .uri(target_uri)
+        .body(req.into_body())
+        .unwrap();
+
+    // Send the redirected request and return the response
+    let response = client.request(redirected_req).await.unwrap();
+
+    // Convert the response to `hyper::Response` and return it
+    Ok(response.into())
 }
 
-// function to get the 
-
-
+// spawn plumber 
 fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
     ports.lock().unwrap().push(port);
     let mut _output = Command::new("R")
@@ -86,12 +135,12 @@ fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
         .expect("Failed to start R process");
 }
 
-
-fn get_random_plumber_port(ports: Arc<Mutex<Vec<u16>>>) -> u16 {
+// gets a single port number from available plumber ports
+fn get_random_plumber_port(ports: Vec<u16>) -> u16 {
     let mut rng = rand::thread_rng();
-    let ports_data = ports.lock().unwrap();
-    let index = rng.gen_range(0..ports_data.len());
-    ports_data[index]
+    //let ports_data = ports.lock().unwrap();
+    let index = rng.gen_range(0..ports.len());
+    ports[index]
 }
 
 
@@ -99,7 +148,6 @@ fn get_random_plumber_port(ports: Arc<Mutex<Vec<u16>>>) -> u16 {
 // these functions generate random 
 use rand::Rng;
 use std::net::{TcpListener};
-
 fn generate_random_port() -> u16 {
     let mut rng = rand::thread_rng();
     loop {
@@ -109,7 +157,7 @@ fn generate_random_port() -> u16 {
         }
     }
 }
-
+// checks to see if the port is available
 fn is_port_available(port: u16) -> bool {
     match TcpListener::bind(format!("127.0.0.1:{}", port)) {
         Ok(listener) => {
@@ -120,8 +168,6 @@ fn is_port_available(port: u16) -> bool {
         Err(_) => false, // The port is not available
     }
 }
-
-
 
 
 // This approach does not work because eval_string / R! block the thread
