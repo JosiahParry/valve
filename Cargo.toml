@@ -7,13 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "*" }
-extendr-api = "0.4.0"
 extendr-engine = "0.4.0"
 hyper = "0.14.26"
-libR-sys = "0.4.0"
 rand = "0.8.5"
-reqwest = "0.11.18"
-# reqwest = { version = "0.11.18", features = ["blocking"] }
-tokio = { version = "1.28.1", features = ["full", "macros", "rt-multi-thread"] }
-tower = "0.4.13"
-tower-http = "0.4.0"
+tokio = { version = "1.28.1", features = ["full"] }
