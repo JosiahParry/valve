@@ -34,3 +34,65 @@ function(zzz) {
     Sys.sleep(zzz)
     paste0("I slept for ", zzz, " seconds")
 }
+
+#* Plot a histogram
+#* @serializer png
+#* @get /plot
+function() {
+    rand <- rnorm(100)
+    hist(rand)
+}
+
+#* Return the sum of two numbers
+#* @param a The first number to add
+#* @param b The second number to add
+#* @post /sum
+function(a, b) {
+    as.numeric(a) + as.numeric(b)
+}
+
+
+#* @serializer pdf
+#* @get /pdf
+function(){
+  plot(1:10, type="b")
+  text(4, 8, "PDF from plumber!")
+}
+
+#* @serializer text
+#* @get /text
+function(){
+  "just plain text here..."
+}
+
+#* @serializer html
+#* @get /html
+function(){
+  "<html><h1>HTML!</h1>HTML here!</html>"
+}
+
+#* Download a binary file.
+#* @serializer contentType list(type="application/octet-stream")
+#* @get /download-binary
+function(res){
+  # TODO: Stream the data into the response rather than loading it all in memory
+  # first.
+
+  # Create a temporary example RDS file
+  x <- list(a=123, b="hi!")
+  tmp <- tempfile(fileext=".rds")
+  saveRDS(x, tmp)
+
+  # This header is a convention that instructs browsers to present the response
+  # as a download named "mydata.Rds" rather than trying to render it inline.
+  res$setHeader("Content-Disposition", "attachment; filename=mydata.Rds")
+
+  # Read in the raw contents of the binary file
+  bin <- readBin(tmp, "raw", n=file.info(tmp)$size)
+
+  # Delete the temp file
+  file.remove(tmp)
+
+  # Return the binary contents
+  bin
+}

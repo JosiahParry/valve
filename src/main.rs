@@ -15,11 +15,39 @@ use std::{
     process::{Command, Stdio}
 };
 
+// set constants 
+const HOST: &str = "127.0.0.1";
+//const AXUM_PORT: u16 = 3000;
 
+use {argh::FromArgs, std::fmt::Debug};
+#[derive(FromArgs, Debug)]
+/// Reach new heights.
+struct Cli {
+    /// an optional nickname for the pilot
+    #[argh(option, short = 'h', default = r#"String::from("127.0.0.1")"#)]
+    host: String,
+
+    /// an optional height
+    #[argh(option, short = 'p', default = "3000")]
+    port: u16,
+
+    /// an optional direction which is "up" by default
+    #[argh(option, short = 'n', default = "3")]
+    n_threads: u16,
+}
 #[tokio::main(worker_threads = 5)]
 async fn main() {
+
+
+    let cli_args: Cli = argh::from_env();
+    println!("{cli_args:?}");
+    let host = cli_args.host.as_str();
+    let AXUM_PORT = cli_args.port;
+    let n_threads = cli_args.n_threads;
+    // TODO spawn new threads if need be
+
     // specify the number of Plumber APIs to spawn
-    let num_threads = 5;
+    let num_threads = n_threads;
     let ports = Arc::new(Mutex::new(
         (0..num_threads)
             .map(|_| generate_random_port())
@@ -36,14 +64,14 @@ async fn main() {
 
         let _handle = thread::spawn(move || {
             let port = ports_clone.lock().unwrap().next().unwrap();
-            println!("Spawning thread on port {port}");
-            spawn_plumber(port);
+            println!("Spawning Plumber API at {HOST}:{port}");
+            spawn_plumber(HOST, port);
         });
     }
 
     // Access the ports data
     //let ports_data = ports.clone();
-    println!("Spawned ports: {ports:?}");
+    //println!("Spawned ports: {}", ports);
 
     // first port will be used to host docs
     let first_port = ports.lock().unwrap().next().unwrap();
@@ -55,7 +83,7 @@ async fn main() {
             get(move || {
                 async move {
                     // Create the docs path using the cloned value
-                    let doc_path = format!("http://127.0.0.1:{first_port}/__docs__/");
+                    let doc_path = format!("http://{HOST}:{first_port}/__docs__/");
                     Redirect::to(doc_path.as_str())
                 }
             }),
@@ -63,13 +91,14 @@ async fn main() {
         .route(
             "/*key",
             axum::routing::any(move |req: Request<Body>| {
-                // grab random port
-                //let pts = ports.lock().unwrap();
                 async move {
+                    // select the next port
                     let port = ports.lock().unwrap().next().unwrap();
-                    let ruri = req.uri();
-                    let mut uri = ruri.clone().into_parts();
-                    uri.authority = Some(format!("127.0.0.1:{port}").as_str().parse().unwrap());
+                    let ruri = req.uri(); // get the URI
+                    let mut uri = ruri.clone().into_parts(); // clone 
+                    // change URI to random port from above
+                    uri.authority = Some(format!("{HOST}:{port}").as_str().parse().unwrap());
+                    // TODO enable https or other schemes
                     uri.scheme = Some("http".parse().unwrap());
                     let new_uri = Uri::from_parts(uri).unwrap().to_string();
                     Redirect::temporary(new_uri.as_str())
@@ -78,20 +107,19 @@ async fn main() {
         );
 
     // Start the Axum server
-    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
+    let axum_host = format!("{HOST}:{AXUM_PORT}");
+    axum::Server::bind(&axum_host.as_str().parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
 }
 
-
-
 // spawn plumber
-fn spawn_plumber(port: u16) {
+fn spawn_plumber(host: &str, port: u16) {
     let mut _output = Command::new("R")
         .arg("-e")
-        .arg(format!("plumber::plumb('plumber.R')$run(port = {port})"))
-        .stdin(Stdio::null())
+        .arg(format!("plumber::plumb('plumber.R')$run(host = '{host}', port = {port})"))
+       // .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -112,7 +140,7 @@ fn generate_random_port() -> u16 {
 }
 // checks to see if the port is available
 fn is_port_available(port: u16) -> bool {
-    match TcpListener::bind(format!("127.0.0.1:{port}")) {
+    match TcpListener::bind(format!("{HOST}:{port}")) {
         Ok(listener) => {
             // The port is available, so we close the listener and return true
             drop(listener);
