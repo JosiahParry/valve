@@ -16,33 +16,34 @@ use std::{
 };
 
 // set constants 
-const HOST: &str = "127.0.0.1";
+//const HOST: &str = "127.0.0.1";
 //const AXUM_PORT: u16 = 3000;
 
 use {argh::FromArgs, std::fmt::Debug};
 #[derive(FromArgs, Debug)]
-/// Reach new heights.
+/// Distribute your plumber API in parallel. 
 struct Cli {
-    /// an optional nickname for the pilot
+    /// host to serve APIs on
     #[argh(option, short = 'h', default = r#"String::from("127.0.0.1")"#)]
     host: String,
 
-    /// an optional height
+    /// the port to serve the main application on
     #[argh(option, short = 'p', default = "3000")]
     port: u16,
 
-    /// an optional direction which is "up" by default
+    /// number of plumber APIs to spawn
     #[argh(option, short = 'n', default = "3")]
     n_threads: u16,
 }
+
 #[tokio::main(worker_threads = 5)]
 async fn main() {
 
 
     let cli_args: Cli = argh::from_env();
     println!("{cli_args:?}");
-    let HOST = cli_args.host.as_str();
-    let AXUM_PORT = cli_args.port;
+    let axum_host = Arc::new(cli_args.host.clone());
+    let axum_port = cli_args.port;
     let n_threads = cli_args.n_threads;
     // TODO spawn new threads if need be
 
@@ -50,7 +51,7 @@ async fn main() {
     let num_threads = n_threads;
     let ports = Arc::new(Mutex::new(
         (0..num_threads)
-            .map(|_| generate_random_port())
+            .map(|_| generate_random_port(&axum_host.as_str()))
             .collect::<Vec<u16>>()
             .into_iter()
             .cycle(),
@@ -62,14 +63,11 @@ async fn main() {
     for _ in 0..num_threads {
         //let ports_clone = Arc::clone(&ports);
         let port_i = ports.lock().unwrap().next().unwrap();
-
-
+        let axum_host = axum_host.clone();
         let _handle = thread::spawn(move || {
-            //let port = ports_clone.lock().unwrap().next().unwrap();
-            //println!("{port_i}");
             let port = port_i;
-            println!("Spawning Plumber API at {HOST}:{port}");
-            spawn_plumber(HOST, port);
+            println!("Spawning Plumber API at {}:{port}", axum_host);
+            spawn_plumber(&axum_host, port);
         });
     }
 
@@ -81,13 +79,18 @@ async fn main() {
     let first_port = ports.clone().lock().unwrap().next().unwrap();
 
     // Create the Axum application
+    // clone the host to be passed into the handlers these should be done via a 
+    // State approach, though.
+    let ah_doc = axum_host.clone();
+    let ah_reroute = axum_host.clone();
     let app = axum::Router::new()
         .route(
             "/__docs__",
             get(move || {
+                let axum_host = ah_doc;
                 async move {
                     // Create the docs path using the cloned value
-                    let doc_path = format!("http://{HOST}:{first_port}/__docs__/");
+                    let doc_path = format!("http://{}:{first_port}/__docs__/", axum_host.as_str());
                     Redirect::to(doc_path.as_str())
                 }
             }),
@@ -95,13 +98,14 @@ async fn main() {
         .route(
             "/*key",
             axum::routing::any(move |req: Request<Body>| {
+                let axum_host = ah_reroute;
                 async move {
                     // select the next port
                     let port = ports.lock().unwrap().next().unwrap();
                     let ruri = req.uri(); // get the URI
                     let mut uri = ruri.clone().into_parts(); // clone 
                     // change URI to random port from above
-                    uri.authority = Some(format!("{HOST}:{port}").as_str().parse().unwrap());
+                    uri.authority = Some(format!("{}:{port}", axum_host.as_str()).as_str().parse().unwrap());
                     // TODO enable https or other schemes
                     uri.scheme = Some("http".parse().unwrap());
                     let new_uri = Uri::from_parts(uri).unwrap().to_string();
@@ -111,8 +115,8 @@ async fn main() {
         );
 
     // Start the Axum server
-    let axum_host = format!("{HOST}:{AXUM_PORT}");
-    axum::Server::bind(&axum_host.as_str().parse().unwrap())
+    let full_axum_host = format!("{axum_host}:{axum_port}");
+    axum::Server::bind(&full_axum_host.as_str().parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
@@ -130,21 +134,20 @@ fn spawn_plumber(host: &str, port: u16) {
         .expect("Failed to start R process");
 }
 
-
 // from chatGPT
 // these functions generate random
-fn generate_random_port() -> u16 {
+fn generate_random_port(host: &str) -> u16 {
     let mut rng = rand::thread_rng();
     loop {
         let port: u16 = rng.gen_range(1024..=65535);
-        if is_port_available(port) {
+        if is_port_available(host, port) {
             return port;
         }
     }
 }
 // checks to see if the port is available
-fn is_port_available(port: u16) -> bool {
-    match TcpListener::bind(format!("{HOST}:{port}")) {
+fn is_port_available(host: &str, port: u16) -> bool {
+    match TcpListener::bind(format!("{host}:{port}")) {
         Ok(listener) => {
             // The port is available, so we close the listener and return true
             drop(listener);
@@ -153,6 +156,8 @@ fn is_port_available(port: u16) -> bool {
         Err(_) => false, // The port is not available
     }
 }
+
+
 
 // This approach does not work because eval_string / R! block the thread
 // need a "detached child process"
