@@ -60,10 +60,14 @@ async fn main() {
     // All threads that are spawned for a plumber API are going to be blocked
     // Those threads can't ever be used to return a value. So joining is impossible
     for _ in 0..num_threads {
-        let ports_clone = Arc::clone(&ports);
+        //let ports_clone = Arc::clone(&ports);
+        let port_i = ports.lock().unwrap().next().unwrap();
+
 
         let _handle = thread::spawn(move || {
-            let port = ports_clone.lock().unwrap().next().unwrap();
+            //let port = ports_clone.lock().unwrap().next().unwrap();
+            //println!("{port_i}");
+            let port = port_i;
             println!("Spawning Plumber API at {HOST}:{port}");
             spawn_plumber(HOST, port);
         });
@@ -71,10 +75,10 @@ async fn main() {
 
     // Access the ports data
     //let ports_data = ports.clone();
-    //println!("Spawned ports: {}", ports);
+    println!("Spawned ports: {:?}", ports);
 
     // first port will be used to host docs
-    let first_port = ports.lock().unwrap().next().unwrap();
+    let first_port = ports.clone().lock().unwrap().next().unwrap();
 
     // Create the Axum application
     let app = axum::Router::new()
