@@ -41,7 +41,7 @@ async fn main() {
 
     let cli_args: Cli = argh::from_env();
     println!("{cli_args:?}");
-    let host = cli_args.host.as_str();
+    let HOST = cli_args.host.as_str();
     let AXUM_PORT = cli_args.port;
     let n_threads = cli_args.n_threads;
     // TODO spawn new threads if need be
