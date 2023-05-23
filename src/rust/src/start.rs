@@ -49,7 +49,7 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
 
     // Access the ports data
     //let ports_data = ports.clone();
-    println!("Spawned ports: {ports:?}");
+    //println!("Spawned ports: {ports:?}");
 
     // first port will be used to host docs
     let first_port = ports.clone().lock().unwrap().next().unwrap();
@@ -100,7 +100,10 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
 
 
 // spawn plumber
-fn spawn_plumber(host: &str, port: u16) {
+fn spawn_plumber(host: &str, port: u16
+   // , filepath: Option<&str>
+) {
+    //let filepath = filepath.unwrap_or("plumber.R");
     let mut _output = Command::new("R")
         .arg("-e")
         .arg(format!("plumber::plumb('plumber.R')$run(host = '{host}', port = {port})"))

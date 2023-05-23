@@ -3,7 +3,9 @@ name = "valve"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+path = "src/lib.rs"
+crate-type = [ "cdylib",  "staticlib"]
 
 [dependencies]
 argh = "0.1.10"
@@ -11,4 +13,9 @@ axum = { version = "*" }
 extendr-engine = "0.4.0"
 hyper = "0.14.26"
 rand = "0.8.5"
-tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread", "signal"] }
+extendr-api = '*'
+
+
+
+
