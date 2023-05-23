@@ -11,3 +11,4 @@ TODO
 - R function for creating vetiver docker containers
 - do load testing with Drill
 - convert to using `State` 
+- options for verbosity of R processes

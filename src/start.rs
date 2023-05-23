@@ -27,7 +27,7 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
     let num_threads = n_threads;
     let ports = Arc::new(Mutex::new(
         (0..num_threads)
-            .map(|_| generate_random_port(&axum_host.as_str()))
+            .map(|_| generate_random_port(axum_host.as_str()))
             .collect::<Vec<u16>>()
             .into_iter()
             .cycle(),
@@ -42,14 +42,14 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
         let axum_host = axum_host.clone();
         let _handle = thread::spawn(move || {
             let port = port_i;
-            println!("Spawning Plumber API at {}:{port}", axum_host);
+            println!("Spawning Plumber API at {axum_host}:{port}");
             spawn_plumber(&axum_host, port);
         });
     }
 
     // Access the ports data
     //let ports_data = ports.clone();
-    println!("Spawned ports: {:?}", ports);
+    println!("Spawned ports: {ports:?}");
 
     // first port will be used to host docs
     let first_port = ports.clone().lock().unwrap().next().unwrap();
@@ -104,7 +104,7 @@ fn spawn_plumber(host: &str, port: u16) {
     let mut _output = Command::new("R")
         .arg("-e")
         .arg(format!("plumber::plumb('plumber.R')$run(host = '{host}', port = {port})"))
-       // .stdin(Stdio::null())
+        .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
