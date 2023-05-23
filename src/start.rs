@@ -100,7 +100,6 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
 
 
 // spawn plumber
-#[allow(dead_code)]
 fn spawn_plumber(host: &str, port: u16) {
     let mut _output = Command::new("R")
         .arg("-e")
@@ -114,7 +113,6 @@ fn spawn_plumber(host: &str, port: u16) {
 
 // from chatGPT
 // these functions generate random
-#[allow(dead_code)]
 fn generate_random_port(host: &str) -> u16 {
     let mut rng = rand::thread_rng();
     loop {
@@ -125,7 +123,6 @@ fn generate_random_port(host: &str) -> u16 {
     }
 }
 // checks to see if the port is available
-#[allow(dead_code)]
 fn is_port_available(host: &str, port: u16) -> bool {
     match TcpListener::bind(format!("{host}:{port}")) {
         Ok(listener) => {

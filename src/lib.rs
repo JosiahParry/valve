@@ -1,7 +1,7 @@
-mod start;
+pub mod start;
 use crate::start::valve_start;
 
-fn valve_create(host: String, port: u16, n_threads: u16, workers: usize) {
+pub fn valve_create(host: String, port: u16, n_threads: u16, workers: usize) {
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
         .enable_all()
