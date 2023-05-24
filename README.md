@@ -1,8 +1,10 @@
 # Valve
 
-The purpose of `valve` is to create a multi-threaded plumber API utilizing `libR-sys` and the plumber R package.
+`valve` creates multi-threaded [plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks.
 
-Plumber is an R package that creates RESTful APIs from R functions. It is limited in that each API is a single R process and thus a single thread. The intention of this Rust crate is to be able to spawn multiple threads each with their own Plumber API leveraging Rust's "fearless concurrency."
+## Motivation
+
+Plumber is an R package that creates RESTful APIs from R functions. It is limited in that each API is a single R process and thus a single thread. Multiple queries are executed in the sequence that they came in. Scaling plumber APIs is not easy. The intention of valve is to be able to make scaling plumber APIs, and thus R itself, easier. This is done by spawning plumber APIs on multiple threads and having an axum app on a main thread distributing requests across the multiple plumber APIs. We can make R better by leveraging Rust's ["fearless concurrency."](https://blog.rust-lang.org/2015/04/10/Fearless-Concurrency.html)
 
 
 ## Installation
