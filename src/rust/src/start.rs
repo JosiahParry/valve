@@ -17,7 +17,6 @@ use std::{
 
 pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u16) {
     let filepath = Arc::new(filepath);
-    
     let axum_host = Arc::new(host);
     let axum_port = port;
     let n_threads = n_threads;

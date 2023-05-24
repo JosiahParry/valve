@@ -1,14 +1,13 @@
-TODO 
+TODO
 
 - validate that plumber.R exists
 - create end point that lists all plumber ports / paths
-- enable host specification via cli
 - spawn new plumber APIs dynamically
 - set cap on number of APIs
-- make into a library
-- the CLI tool calls library functions
 - the library is then called from R
-- R function for creating vetiver docker containers
+- modify Makevars to include a binary that gets installed into `/inst`
+  - ENABLES: R function for creating vetiver docker containers
 - do load testing with Drill
-- convert to using `State` 
+- convert to using `State`
 - options for verbosity of R processes
+
