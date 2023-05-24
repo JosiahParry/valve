@@ -15,9 +15,9 @@ use std::{
     process::{Command, Stdio}
 };
 
-pub async fn valve_start(host: String, port: u16, n_threads: u16) {
-    //let cli_args: Cli = argh::from_env();
-    //println!("{cli_args:?}");
+pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u16) {
+    let filepath = Arc::new(filepath);
+    
     let axum_host = Arc::new(host);
     let axum_port = port;
     let n_threads = n_threads;
@@ -40,10 +40,11 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
         //let ports_clone = Arc::clone(&ports);
         let port_i = ports.lock().unwrap().next().unwrap();
         let axum_host = axum_host.clone();
+        let fp = filepath.clone();
         let _handle = thread::spawn(move || {
             let port = port_i;
             println!("Spawning Plumber API at {axum_host}:{port}");
-            spawn_plumber(&axum_host, port);
+            spawn_plumber(&axum_host, port, &fp.as_str());
         });
     }
 
@@ -100,13 +101,10 @@ pub async fn valve_start(host: String, port: u16, n_threads: u16) {
 
 
 // spawn plumber
-fn spawn_plumber(host: &str, port: u16
-   // , filepath: Option<&str>
-) {
-    //let filepath = filepath.unwrap_or("plumber.R");
+fn spawn_plumber(host: &str, port: u16 , filepath: &str) {
     let mut _output = Command::new("R")
         .arg("-e")
-        .arg(format!("plumber::plumb('plumber.R')$run(host = '{host}', port = {port})"))
+        .arg(format!("plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"))
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())

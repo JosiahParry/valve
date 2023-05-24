@@ -19,6 +19,10 @@ struct Cli {
     /// number of plumber APIs to spawn
     #[argh(option, short = 'n', default = "3")]
     n_threads: u16,
+
+    /// path to the plumber API (default `plumber.R`)
+    #[argh(option, short = 'f', default = r#"String::from("plumber.R")"#)]
+    file: String
 }
 
 //#[tokio::main(worker_threads = 5)]
@@ -33,7 +37,7 @@ fn main() {
         .build()
         .unwrap()
         .block_on(async {
-            valve_start(cli_args.host, cli_args.port, cli_args.n_threads).await;
+            valve_start(cli_args.file, cli_args.host, cli_args.port, cli_args.n_threads).await;
         })
 
 }
