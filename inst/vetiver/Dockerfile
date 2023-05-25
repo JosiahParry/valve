@@ -15,7 +15,23 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
 COPY vetiver_renv.lock renv.lock
 RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
-COPY cars_linear /opt/ml/cars_linear
-COPY plumber.R /opt/ml/plumber.R
-EXPOSE 8000
-ENTRYPOINT ["R", "-e", "pr <- plumber::plumb('/opt/ml/plumber.R'); pr$run(host = '0.0.0.0', port = 8000)"]
+RUN Rscript -e "install.packages('remotes')"
+RUN echo 'stop ittt'
+RUN Rscript -e "remotes::install_github('josiahparry/valve')"
+RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
+
+COPY $VALVE /app
+
+
+EXPOSE 3000
+RUN echo $VALVE
+#ENTRYPOINT ["/app/valve"]
+#ARG APP_NAME=app.jar                    # $APP_NAME can be ARG or ENV type.
+#ENV APP_PATH=app-directory/$APP_NAME    # $APP_PATH must be ENV type.
+#ENTRYPOINT java -jar $APP_PATH
+#ENV EXE=$VALVE
+# Build a shell script
+# Run the generated shell script.
+#ENTRYPOINT ./$EXE
+
+
