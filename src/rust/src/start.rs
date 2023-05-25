@@ -60,6 +60,7 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
     let ah_doc = axum_host.clone();
     let ah_reroute = axum_host.clone();
     let app = axum::Router::new()
+        .route("/", get(|| async { "I'm alive!!" }))
         .route(
             "/__docs__",
             get(move || {
