@@ -7,6 +7,9 @@ edition = "2021"
 path = "src/lib.rs"
 crate-type = [ "cdylib",  "staticlib"]
 
+[registries.crates-io]
+protocol = "sparse"
+
 [dependencies]
 argh = "0.1.10"
 axum = { version = "*" }
