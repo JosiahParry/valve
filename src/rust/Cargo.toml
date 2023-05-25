@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 path = "src/lib.rs"
-crate-type = [ "cdylib",  "staticlib"]
+crate-type = ["staticlib"]
 
 [registries.crates-io]
 protocol = "sparse"

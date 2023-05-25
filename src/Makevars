@@ -22,6 +22,7 @@ $(STATLIB):
 		rm -Rf $(CARGOTMP) && \
 		rm -Rf $(LIBDIR)/build; \
 	fi
+
 C_clean:
 	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
 

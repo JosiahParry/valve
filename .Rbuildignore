@@ -3,3 +3,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^inst/valve$
+^src/\.cargo/\.package-cache$
+^\.vscode$
+^src/\.cargo$

@@ -13,7 +13,7 @@ valve_run(
 )
 }
 \arguments{
-\item{filepath}{default \code{plumber.R}. The path to the Plumber API. Provided to
+\item{filepath}{default \code{"plumber.R"}. The path to the Plumber API. Provided to
 the \code{file} argument of \code{plumber::plumb()}.}
 
 \item{host}{default \code{"127.0.0.1"}. Where to host the valve app and Plumber APIs.}
@@ -23,7 +23,7 @@ the \code{file} argument of \code{plumber::plumb()}.}
 \item{n_threads}{default \code{3}. The number of Plumber APIs to run in parallel.}
 
 \item{workers}{default \code{3}. The number of worker threads in the valve app to
-execute requests. This number should not be larger than \code{n_threads}.}
+execute requests. This number should not be larger than \code{n_threads + 1}.}
 }
 \description{
 Run a plumber API in parallel using valve. Plumber APIs are spawned on

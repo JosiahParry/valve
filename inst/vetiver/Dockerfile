@@ -12,26 +12,29 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   zlib1g-dev \
   && apt-get clean
 
+
 COPY vetiver_renv.lock renv.lock
 RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
 RUN Rscript -e "install.packages('remotes')"
-RUN echo 'stop ittt'
-RUN Rscript -e "remotes::install_github('josiahparry/valve')"
-RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
 
-COPY $VALVE /app
+RUN apt-get install -y -q \
+    build-essential \
+    curl
+# Get Rust; NOTE: using sh for better compatibility with other base images
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 
+# Add .cargo/bin to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
 
-EXPOSE 3000
-RUN echo $VALVE
+# Check cargo is visible
+RUN cargo --help
+
+#RUN echo 'help'
+RUN Rscript -e "remotes::install_github('josiahparry/valve', upgrade = FALSE)" | tee /logs/my-install-cmd.log
+
+#RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
+#COPY $VALVE /app
+#EXPOSE 3000
+#RUN echo $VALVE
 #ENTRYPOINT ["/app/valve"]
-#ARG APP_NAME=app.jar                    # $APP_NAME can be ARG or ENV type.
-#ENV APP_PATH=app-directory/$APP_NAME    # $APP_PATH must be ENV type.
-#ENTRYPOINT java -jar $APP_PATH
-#ENV EXE=$VALVE
-# Build a shell script
-# Run the generated shell script.
-#ENTRYPOINT ./$EXE
-
-
