@@ -553,6 +553,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0aa32867d44e6f2ce3385e89dceb990188b8bb0fb25b0cf576647a6f98ac5105"
 dependencies = [
  "autocfg",
+ "bytes",
  "libc",
  "mio",
  "num_cpus",

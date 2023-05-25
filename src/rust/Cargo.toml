@@ -14,9 +14,9 @@ protocol = "sparse"
 argh = "0.1.10"
 axum = { version = "*" }
 extendr-engine = "0.4.0"
-hyper = "0.14.26"
+hyper = { version = "0.14.26", features = ["client"] } 
 rand = "0.8.5"
-tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread", "signal"] }
+tokio = { version = "1.28.1", features = ["io-util", "macros", "rt-multi-thread", "signal"] }
 extendr-api = '*'
 
 
