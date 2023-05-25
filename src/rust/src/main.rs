@@ -20,6 +20,10 @@ struct Cli {
     #[argh(option, short = 'n', default = "3")]
     n_threads: u16,
 
+    /// number of Tokio workers to spawn
+    #[argh(option, short = 'w', default = "3")]
+    workers: u16,
+
     /// path to the plumber API (default `plumber.R`)
     #[argh(option, short = 'f', default = r#"String::from("plumber.R")"#)]
     file: String
@@ -27,12 +31,10 @@ struct Cli {
 
 //#[tokio::main(worker_threads = 5)]
 fn main() {
-
     let cli_args: Cli = argh::from_env();
-    println!("{cli_args:?}");
-
+    
     tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(2)
+        .worker_threads(cli_args.workers as usize)
         .enable_all()
         .build()
         .unwrap()

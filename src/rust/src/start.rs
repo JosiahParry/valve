@@ -27,7 +27,7 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
     let c = Client::new();
 
     // specify the number of Plumber APIs to spawn
-    let num_threads = n_threads;
+    let num_threads = n_threads; // create the iterator for ports 
     let ports: Arc<Mutex<Cycle<std::vec::IntoIter<u16>>>> = Arc::new(Mutex::new(
         (0..num_threads)
             .map(|_| generate_random_port(axum_host.as_str()))
@@ -35,8 +35,6 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
             .into_iter()
             .cycle()
     ));
-
-
 
     // start R and print R_HOME
     // All threads that are spawned for a plumber API are going to be blocked
@@ -53,48 +51,8 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
         });
     }
 
-    // Access the ports data
-    //let ports_data = ports.clone();
-    //println!("Spawned ports: {ports:?}");
-
-    // first port will be used to host docs
-    let first_port = ports.clone().lock().unwrap().next().unwrap();
-
-    // Create the Axum application
-    // clone the host to be passed into the handlers these should be done via a 
-    // State approach, though.
-    let ah_doc = axum_host.clone();
     let app = axum::Router::new()
-        .route("/", get(|| async { "I'm alive!!" }))
-        .route(
-            "/__docs__",
-            get(move || {
-                let axum_host = ah_doc;
-                async move {
-                    // Create the docs path using the cloned value
-                    let doc_path = format!("http://{}:{first_port}/__docs__/", axum_host.as_str());
-                    Redirect::to(doc_path.as_str())
-                }
-            }),
-        )
-        // .route(
-        //     "/*key",
-        //     axum::routing::any(move |mut req: Request<Body>| {
-        //         let axum_host = ah_reroute;
-        //         async move {
-        //             // select the next port
-        //             let port = ports.lock().unwrap().next().unwrap();
-        //             let ruri = req.uri(); // get the URI
-        //             let mut uri = ruri.clone().into_parts(); // clone 
-        //             // change URI to random port from above
-        //             uri.authority = Some(format!("{}:{port}", axum_host.as_str()).as_str().parse().unwrap());
-        //             // TODO enable https or other schemes
-        //             uri.scheme = Some("http".parse().unwrap());
-        //             let new_uri = Uri::from_parts(uri).unwrap().to_string();
-        //             Redirect::temporary(new_uri.as_str()).into_response()
-        //         }
-        //     }),
-        // )
+        .route("/", get(|| async { Redirect::permanent("/__docs__/") }))
         .route(
             "/*key",
             axum::routing::any(redir_handler)
