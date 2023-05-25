@@ -1,0 +1,13 @@
+# Test prediction endpoints
+---
+concurrency: 5
+base: 'http://localhost:3000'
+iterations: 100
+rampup: 2
+
+plan:
+  - name: predict
+    request:
+      url: /sleep?zzz=0.5
+      method: GET
+

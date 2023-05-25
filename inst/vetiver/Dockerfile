@@ -12,8 +12,8 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   zlib1g-dev \
   && apt-get clean
 
-
 COPY vetiver_renv.lock renv.lock
+
 RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
 RUN Rscript -e "install.packages('remotes')"
@@ -27,14 +27,8 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 # Add .cargo/bin to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Check cargo is visible
-RUN cargo --help
+RUN Rscript -e "remotes::install_github('josiahparry/valve', upgrade = FALSE)"
 
-#RUN echo 'help'
-RUN Rscript -e "remotes::install_github('josiahparry/valve', upgrade = FALSE)" | tee /logs/my-install-cmd.log
-
-#RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
-#COPY $VALVE /app
-#EXPOSE 3000
-#RUN echo $VALVE
-#ENTRYPOINT ["/app/valve"]
+RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
+EXPOSE 3000
+ENTRYPOINT $(Rscript -e "cat(system.file('valve', package = 'valve'))") -h "0.0.0.0"
