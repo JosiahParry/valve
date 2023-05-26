@@ -30,6 +30,7 @@ The R package exports only 1 function: `valve_run()`. It takes 5 arguments, the 
 `n_threads` refers to how many background Plumber API processes with be spawned whereas the `workers` argument determines how many asynchronous worker threads are created by tokio. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. Also note that connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
 
 ```r
+library(valve)
 # get included plumber API path
 plumber_api_path <- system.file("plumber.R", package = "valve")
 
@@ -102,7 +103,7 @@ In the former each worker gets to make the request in approximately the same amo
 
 Simple benchmarks using drill can be found in `inst/bench-sleep-plumber.yml` and `bench-sleep-valve.yml`. 
 
-The bench mark calls the `/sleep` endpoint and sleeps for 500ms for 100 times with 5 concurrent threads. 
+The bench mark calls the `/sleep` endpoint and sleeps for 500ms for 100 times with 5 concurrent threads. This alone can illustrate how much we can speed up a single plumber API's response time with valve.
 
 Plumber's benchmark:
 
@@ -136,3 +137,7 @@ Sample standard deviation 2ms
 99.5'th percentile        518ms
 99.9'th percentile        518ms
 ```
+
+### With all that said....
+
+valve is best suited for light-ish work loads. Each background plumber API will hold their own copy of their R objects. So if you are serving a machine learning model that is a GB big, that model will have to be copied into each thread and that can be quickly bloat up your ram. So be smart! If you have massive objects in your R session, try and reduce the clutter and thin it out. 
