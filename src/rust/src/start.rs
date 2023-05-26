@@ -1,16 +1,19 @@
 use rand::Rng;
-use hyper::Uri;
+use hyper::{client::HttpConnector, Uri};
+type Client = hyper::client::Client<HttpConnector, Body>;
 
 use axum::{
     http::Request,
     response::{Redirect, Response, IntoResponse},
     body::Body, 
-    routing::get
+    routing::get,
+    extract::{Extension, State}
 };
 
 
 use std::{
     thread,
+    iter::Cycle,
     net::TcpListener,
     sync::{Arc, Mutex},
     process::{Command, Stdio}
@@ -107,13 +110,6 @@ fn is_port_available(host: &str, port: u16) -> bool {
 }
 
 
-
-use axum::extract::Extension;
-use axum::extract::State;
-use std::iter::Cycle;
-use hyper::client::HttpConnector;
-type Client = hyper::client::Client<HttpConnector, Body>;
-
 async fn redir_handler(
     State(client): State<Client>,
     Extension(host): Extension<Arc<String>>,
@@ -134,7 +130,6 @@ async fn redir_handler(
         client.request(req).await.unwrap().into_response()
 
 }
-
 
 // It appears that what i need is a reverse proxy
 // tokio discord directed me to https://github.com/tokio-rs/axum/blob/v0.6.x/examples/reverse-proxy/src/main.rs

@@ -1,6 +1,8 @@
 //mod start;
 //use crate::start::valve_start;
 mod start;
+use std::process::Stdio;
+
 use crate::start::valve_start;
 
 
@@ -33,6 +35,40 @@ struct Cli {
 fn main() {
     let cli_args: Cli = argh::from_env();
     
+    // validate that the file exists
+    let p = std::path::Path::new(&cli_args.file).try_exists().unwrap();
+    if !p {
+        panic!("plumber file does not exist.")
+    }
+
+    if cli_args.n_threads < 1 {
+        panic!("Cannot have fewer than 1 plumber API")
+    }
+
+    if cli_args.workers < 1 {
+        panic!("Cannot have fewer than 1 worker thread")
+    }
+
+    // run R --version if error things will panic
+    std::process::Command::new("R")
+        .arg("--version")
+        .stdout(Stdio::null())
+        .spawn()
+        .unwrap();
+
+    let plumber_exists = std::process::Command::new("Rscript")
+        .arg("-e")
+        .arg("library(plumber)")
+        .stderr(Stdio::piped())
+        .output()
+        .unwrap()
+        .status
+        .success();
+
+    if !plumber_exists {
+        panic!("plumber package cannot be found")
+    }
+
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(cli_args.workers as usize)
         .enable_all()
@@ -43,8 +79,6 @@ fn main() {
         })
 
 }
-
-
 
 // This approach does not work because eval_string / R! block the thread
 // need a "detached child process"
