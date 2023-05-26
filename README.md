@@ -9,7 +9,9 @@ Plumber is an R package that creates RESTful APIs from R functions. It is limite
 
 ## Installation
 
-Install the R package using 
+Install the R package using {remotes}. Note that this will compile the package from source which will require rust to be installed. If you don't have rust installed follow the instructions [here](https://www.rust-lang.org/tools/install). Rust is the second easiest programming language to install after R. 
+
+> I also recommend installing the development version of {rextendr} via `pak::pak("extendr/rextendr")` which provides the function `rextendr::rust_sitrep()` which will update you on if you have a compatible Rust installation.
 
 ```r
 remotes::install_github("josiahparry/valve")
