@@ -14,20 +14,19 @@
 #'    execute requests. This number should not be larger than `n_threads + 1`.
 #' @import plumber
 #' @export
+#' @examples
+#' if (interactive()) {
+#'   plumber_api_path <- system.file("plumber.R", package = "valve")
+#'   valve_run(plumber_api_path)
+#' }
 valve_run <- function(filepath = "plumber.R",
                       host = "127.0.0.1",
                       port = 3000,
                       n_threads = 3,
-                      workers = 4) {
+                      workers = 3) {
 
-  fp <- filepath
-  hst <- host
-  prt <- port
-  n <- n_threads
-  wrks <- workers
-
-  docs <- paste0("http://", hst, ":", prt, "/__docs__")
+  docs <- paste0("http://", host, ":", port, "/__docs__/")
   cli::cli_inform("Docs hosted at {.url {docs}}")
-  valve_run_(fp, hst, prt, n, wrks)
+  valve_run_(filepath, host, port, n_threads, workers)
 
 }

@@ -9,7 +9,7 @@ valve_run(
   host = "127.0.0.1",
   port = 3000,
   n_threads = 3,
-  workers = 4
+  workers = 3
 )
 }
 \arguments{
@@ -30,4 +30,10 @@ Run a plumber API in parallel using valve. Plumber APIs are spawned on
 \code{n_threads} asynchronous threads on random ports. Incoming requests are handled
 on a single port and redirected to the plumber APIs in a
 simple round-robin fashion.
+}
+\examples{
+if (interactive()) {
+  plumber_api_path <- system.file("plumber.R", package = "valve")
+  valve_run(plumber_api_path)
+}
 }

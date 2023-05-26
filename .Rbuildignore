@@ -6,3 +6,4 @@
 ^src/\.cargo/\.package-cache$
 ^\.vscode$
 ^src/\.cargo$
+^LICENSE\.md$
