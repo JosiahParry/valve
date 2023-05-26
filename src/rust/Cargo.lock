@@ -643,7 +643,6 @@ dependencies = [
  "argh",
  "axum",
  "extendr-api",
- "extendr-engine",
  "hyper",
  "rand",
  "tokio",

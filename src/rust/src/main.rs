@@ -5,10 +5,9 @@ use std::process::Stdio;
 
 use crate::start::valve_start;
 
-
 use {argh::FromArgs, std::fmt::Debug};
 #[derive(FromArgs, Debug)]
-/// Distribute your plumber API in parallel. 
+/// Distribute your plumber API in parallel.
 struct Cli {
     /// host to serve APIs on
     #[argh(option, short = 'h', default = r#"String::from("127.0.0.1")"#)]
@@ -28,13 +27,13 @@ struct Cli {
 
     /// path to the plumber API (default `plumber.R`)
     #[argh(option, short = 'f', default = r#"String::from("plumber.R")"#)]
-    file: String
+    file: String,
 }
 
 //#[tokio::main(worker_threads = 5)]
 fn main() {
     let cli_args: Cli = argh::from_env();
-    
+
     // validate that the file exists
     let p = std::path::Path::new(&cli_args.file).try_exists().unwrap();
     if !p {
@@ -75,9 +74,14 @@ fn main() {
         .build()
         .unwrap()
         .block_on(async {
-            valve_start(cli_args.file, cli_args.host, cli_args.port, cli_args.n_threads).await;
+            valve_start(
+                cli_args.file,
+                cli_args.host,
+                cli_args.port,
+                cli_args.n_threads,
+            )
+            .await;
         })
-
 }
 
 // This approach does not work because eval_string / R! block the thread

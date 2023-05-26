@@ -1,9 +1,7 @@
-
 pub mod start;
 use extendr_api::prelude::*;
 
 use crate::start::valve_start;
-
 
 #[extendr]
 pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, workers: u16) {
@@ -24,7 +22,6 @@ pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, wor
                     }
                 }
             };
-            
         });
 }
 
