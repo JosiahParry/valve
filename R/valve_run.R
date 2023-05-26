@@ -12,6 +12,8 @@
 #' @param n_threads default `3`. The number of Plumber APIs to run in parallel.
 #' @param workers default `3`. The number of worker threads in the valve app to
 #'    execute requests. This number should not be larger than `n_threads + 1`.
+#' @import plumber
+#' @export
 valve_run <- function(filepath = "plumber.R",
                       host = "127.0.0.1",
                       port = 3000,
