@@ -25,8 +25,15 @@ valve_run <- function(filepath = "plumber.R",
                       n_threads = 3,
                       workers = 3) {
 
-  docs <- paste0("http://", host, ":", port, "/__docs__/")
-  cli::cli_inform("Docs hosted at {.url {docs}}")
+  stopifnot(
+    "`n_threads` cannot be fewer than 1" =  n_threads > 1,
+    "`workers` cannot be fewer than 1" =  workers > 1,
+    "plumber file cannot be found" = file.exists(filepath)
+  )
+
+
+  docs <- paste0("http://", host, ":", port)
+  cat(paste0("Valve app hosted at \033]8;;", docs, "\a<", docs, ">\033]8;;\a\n"))
   valve_run_(filepath, host, port, n_threads, workers)
 
 }

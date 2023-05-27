@@ -61,7 +61,8 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
 
     // Start the Axum server
     let full_axum_host = format!("{axum_host}:{axum_port}");
-    axum::Server::bind(&full_axum_host.as_str().parse().unwrap())
+    axum::Server::try_bind(&full_axum_host.as_str().parse().unwrap())
+        .unwrap()
         .serve(app.into_make_service())
         .await
         .unwrap();

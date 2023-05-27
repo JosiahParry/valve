@@ -1,0 +1,4 @@
+- connection pooling
+- async vs blocking operations
+- reverse proxying
+- difference between redirect and proxy
