@@ -1,10 +1,13 @@
 pub mod start;
+pub mod pooling;
+
+pub use pooling::*;
+pub use start::*;
+
 use extendr_api::prelude::*;
 
-use crate::start::valve_start;
-
 #[extendr]
-pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, workers: u16) {
+pub fn valve_run_(filepath: String, host: String, port: u16, workers: u16) {
     let workers = workers as usize;
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
@@ -13,7 +16,7 @@ pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, wor
         .unwrap()
         .block_on(async {
             tokio::select! {
-                _ = valve_start(filepath, host, port, n_threads) => {
+                _ = valve_start(filepath, host, port) => {
                 }
                 r = tokio::signal::ctrl_c() => {
                     match r {

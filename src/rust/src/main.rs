@@ -1,9 +1,5 @@
-//mod start;
-//use crate::start::valve_start;
-mod start;
+use valve::start;
 use std::process::Stdio;
-
-use crate::start::valve_start;
 
 use {argh::FromArgs, std::fmt::Debug};
 #[derive(FromArgs, Debug)]
@@ -74,11 +70,11 @@ fn main() {
         .build()
         .unwrap()
         .block_on(async {
-            valve_start(
+            start::valve_start(
                 cli_args.file,
                 cli_args.host,
                 cli_args.port,
-                cli_args.n_threads,
+                //cli_args.n_threads,
             )
             .await;
         })

@@ -1,4 +1,6 @@
-use hyper::{client::HttpConnector, Uri};
+use crate::pooling::*;
+
+use hyper::{client::HttpConnector};
 use rand::Rng;
 type Client = hyper::client::Client<HttpConnector, Body>;
 
@@ -6,58 +8,41 @@ use axum::{
     body::Body,
     extract::{Extension, State},
     http::Request,
-    response::{IntoResponse, Redirect, Response},
+    response::{Redirect, Response},
     routing::get,
 };
 
+use std::time::Duration;
+
 use std::{
-    iter::Cycle,
     net::TcpListener,
     process::{Command, Stdio},
-    sync::{Arc, Mutex},
-    thread,
+    sync::{Arc},
 };
 
-pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u16) {
+pub async fn valve_start(filepath: String, host: String, port: u16) {
     let filepath = Arc::new(filepath);
     let axum_host = Arc::new(host);
     let axum_port = port;
-    let n_threads = n_threads;
 
-    // spawn client
+
+    // spawn client used for proxying
     let c = Client::new();
 
-    // specify the number of Plumber APIs to spawn
-    let num_threads = n_threads; // create the iterator for ports
-    let ports: Arc<Mutex<Cycle<std::vec::IntoIter<u16>>>> = Arc::new(Mutex::new(
-        (0..num_threads)
-            .map(|_| generate_random_port(axum_host.as_str()))
-            .collect::<Vec<u16>>()
-            .into_iter()
-            .cycle(),
-    ));
 
-    // start R and print R_HOME
-    // All threads that are spawned for a plumber API are going to be blocked
-    // Those threads can't ever be used to return a value. So joining is impossible
-    for _ in 0..num_threads {
-        //let ports_clone = Arc::clone(&ports);
-        let port_i = ports.lock().unwrap().next().unwrap();
-        let axum_host = axum_host.clone();
-        let fp = filepath.clone();
-        let _handle = thread::spawn(move || {
-            let port = port_i;
-            println!("Spawning Plumber API at {axum_host}:{port}");
-            spawn_plumber(&axum_host, port, fp.as_str());
-        });
-    }
+    let plumber_manager = PrManager { 
+        host: axum_host.to_string(), 
+        pr_file: filepath.to_string() 
+    };
+
+    let pool = Pool::builder(plumber_manager).build().unwrap();
 
     let app = axum::Router::new()
         .route("/", get(|| async { Redirect::permanent("/__docs__/") }))
-        .route("/*key", axum::routing::any(redir_handler))
+        .route("/*key", axum::routing::any(plumber_handler))
         .with_state(c)
-        .layer(Extension(axum_host.clone()))
-        .layer(Extension(ports));
+        .layer(Extension(pool));
+
 
     // Start the Axum server
     let full_axum_host = format!("{axum_host}:{axum_port}");
@@ -69,22 +54,41 @@ pub async fn valve_start(filepath: String, host: String, port: u16, n_threads: u
 }
 
 // spawn plumber
-fn spawn_plumber(host: &str, port: u16, filepath: &str) {
-    let mut _output = Command::new("R")
+use std::io::{BufReader, BufRead};
+use std::process::Child;
+pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
+    let mut pr_child = Command::new("R")
         .arg("-e")
         .arg(format!(
             "plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"
         ))
         .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .expect("Failed to start R process");
+
+    let stdout = pr_child.stderr.take().expect("stdout to be read");
+    let reader = BufReader::new(stdout);
+    
+    for line in reader.lines() {
+        if let Ok(line) = line {
+            //println!("{}", line);
+            if line.contains("Running swagger") {
+                std::thread::sleep(Duration::from_millis(100));
+                println!("plumber started");
+                break;
+            }
+        }
+    }
+
+    pr_child
+    
 }
 
 // from chatGPT
 // these functions generate random
-fn generate_random_port(host: &str) -> u16 {
+pub fn generate_random_port(host: &str) -> u16 {
     let mut rng = rand::thread_rng();
     loop {
         let port: u16 = rng.gen_range(1024..=65535);
@@ -105,31 +109,22 @@ fn is_port_available(host: &str, port: u16) -> bool {
     }
 }
 
-async fn redir_handler(
+
+use deadpool::managed;
+type Pool = managed::Pool<PrManager>;
+
+async fn plumber_handler(
     State(client): State<Client>,
-    Extension(host): Extension<Arc<String>>,
-    Extension(ports): Extension<Arc<Mutex<Cycle<std::vec::IntoIter<u16>>>>>,
-    mut req: Request<Body>,
+    Extension(pr_pool): Extension<Pool>,
+    req: Request<Body>
 ) -> Response {
-    // select the next port
-    let port = ports.lock().unwrap().next().unwrap();
-    let ruri = req.uri(); // get the URI
-    let mut uri = ruri.clone().into_parts(); // clone
-                                             // change URI to random port from above
-    uri.authority = Some(
-        format!("{}:{port}", host.as_str())
-            .as_str()
-            .parse()
-            .unwrap(),
-    );
-    // TODO enable https or other schemes
-    uri.scheme = Some("http".parse().unwrap());
 
-    *req.uri_mut() = Uri::from_parts(uri).unwrap();
+    pr_pool.get()
+        .await
+        .unwrap()
+        .proxy_request(client, req).await
 
-    client.request(req).await.unwrap().into_response()
 }
-
 // It appears that what i need is a reverse proxy
 // tokio discord directed me to https://github.com/tokio-rs/axum/blob/v0.6.x/examples/reverse-proxy/src/main.rs
 // which is an example of this.
