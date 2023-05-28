@@ -1,11 +1,23 @@
+pub mod plumber;
 pub mod start;
+
+pub use plumber::*;
+pub use start::*;
+
 use extendr_api::prelude::*;
 
-use crate::start::valve_start;
-
 #[extendr]
-pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, workers: u16) {
+pub fn valve_run_(
+    filepath: String,
+    host: String,
+    port: u16,
+    workers: u16,
+    n_max: u16,
+    check_interval: i32,
+    max_age: i32,
+) {
     let workers = workers as usize;
+    let n_max = n_max as usize;
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
         .enable_all()
@@ -13,7 +25,7 @@ pub fn valve_run_(filepath: String, host: String, port: u16, n_threads: u16, wor
         .unwrap()
         .block_on(async {
             tokio::select! {
-                _ = valve_start(filepath, host, port, n_threads) => {
+                _ = valve_start(filepath, host, port, n_max, check_interval, max_age) => {
                 }
                 r = tokio::signal::ctrl_c() => {
                     match r {

@@ -1,4 +1,8 @@
 - connection pooling
+    - build a custom pool with deadpool
+    - check last used time for handling stale connections.
 - async vs blocking operations
 - reverse proxying
 - difference between redirect and proxy
+- i sort of understand what a Cell is
+- I definitely understand Arc and Mutex now
