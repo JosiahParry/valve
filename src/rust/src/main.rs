@@ -74,6 +74,7 @@ fn main() {
                 cli_args.file,
                 cli_args.host,
                 cli_args.port,
+                0
                 //cli_args.n_threads,
             )
             .await;

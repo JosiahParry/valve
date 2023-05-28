@@ -22,9 +22,9 @@ type Client = hyper::client::Client<HttpConnector, Body>;
 
 
 pub struct Plumber {
-    host: String, 
-    port: u16,  
-    process: std::process::Child
+    pub host: String, 
+    pub port: u16,  
+    pub process: std::process::Child
 }
 
 impl Plumber {
@@ -43,6 +43,7 @@ impl Plumber {
             Err(_) => false
         }
     }
+
 
     pub async fn proxy_request(&mut self, client: Client, mut req: Request<Body>) -> Response {
         

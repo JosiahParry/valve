@@ -16,7 +16,7 @@ pub fn valve_run_(filepath: String, host: String, port: u16, workers: u16) {
         .unwrap()
         .block_on(async {
             tokio::select! {
-                _ = valve_start(filepath, host, port) => {
+                _ = valve_start(filepath, host, port, 0) => {
                 }
                 r = tokio::signal::ctrl_c() => {
                     match r {

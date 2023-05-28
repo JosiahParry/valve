@@ -20,7 +20,7 @@ use std::{
     sync::{Arc},
 };
 
-pub async fn valve_start(filepath: String, host: String, port: u16) {
+pub async fn valve_start(filepath: String, host: String, port: u16, _n_max: usize) {
     let filepath = Arc::new(filepath);
     let axum_host = Arc::new(host);
     let axum_port = port;
@@ -35,14 +35,43 @@ pub async fn valve_start(filepath: String, host: String, port: u16) {
         pr_file: filepath.to_string() 
     };
 
-    let pool = Pool::builder(plumber_manager).build().unwrap();
+
+    let pool = Pool::builder(plumber_manager)
+        //.max_size(value)
+        //.timeouts(Timeouts::new())
+        //.wait_timeout(1000 * 10)
+        //.timeouts(60)
+        .build()
+        .unwrap();
+
+
 
     let app = axum::Router::new()
         .route("/", get(|| async { Redirect::permanent("/__docs__/") }))
         .route("/*key", axum::routing::any(plumber_handler))
         .with_state(c)
-        .layer(Extension(pool));
+        .layer(Extension(pool.clone()));
 
+
+    // determines how often to check connects
+    let interval = Duration::from_secs(5);
+    // determines how old a connection can be before being killed
+    let max_age = Duration::from_secs(10);
+
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(interval).await;
+            pool.retain(|pr, metrics| {
+                let too_old = metrics.last_used() < max_age;
+
+                if !too_old {
+                    println!("Killing plumber API at {}:{}", pr.host, pr.port);
+                }
+
+                too_old
+            });
+        }
+    });
 
     // Start the Axum server
     let full_axum_host = format!("{axum_host}:{axum_port}");
@@ -76,7 +105,7 @@ pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
             //println!("{}", line);
             if line.contains("Running swagger") {
                 std::thread::sleep(Duration::from_millis(100));
-                println!("plumber started");
+                //println!("plumber started");
                 break;
             }
         }
