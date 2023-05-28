@@ -4,10 +4,11 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Josiah", "Parry", , "josiah.parry@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9910-865X"))
-Description: Run Plumber APIs in parallel using valve. Valve is a Rust library, 
-  cli tool, and R package, that spawns plumber APIs in parallel. Incoming API
-  requests are distributed sequentially among the APIs. Valve is built using 
-  the powerful tokio and extendr libraries. 
+Description: Scales Plumber APIs in parallel on demand. Valve is a Rust library, 
+  cli tool, and R package, that spawns plumber APIs in parallel. Valve creates a 
+  connection pool of Plumber APIs which are fetched based on availability. Unused
+  connections are terminated. Valve is built using the powerful extendr, tokio,
+  and deadpool libraries. 
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Language: en

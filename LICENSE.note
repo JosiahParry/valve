@@ -66,6 +66,20 @@ License:     Apache-2.0 OR MIT
 
 -------------------------------------------------------------
 
+Name:        deadpool
+Repository:  https://github.com/bikeshedder/deadpool
+Authors:     Michael P. Jung
+License:     Apache-2.0 OR MIT
+
+-------------------------------------------------------------
+
+Name:        deadpool-runtime
+Repository:  https://github.com/bikeshedder/deadpool
+Authors:     Michael P. Jung
+License:     Apache-2.0 OR MIT
+
+-------------------------------------------------------------
+
 Name:        extendr-api
 Repository:  https://github.com/extendr/extendr
 Authors:     andy-thomason, Thomas Down, Mossa Merhi Reimert, Claus O. Wilke, Hiroaki Yutani, Ilia A. Kosenkov, Michael Milton
@@ -336,6 +350,13 @@ Name:        rand_core
 Repository:  https://github.com/rust-random/rand
 Authors:     The Rand Project Developers, The Rust Project Developers
 License:     Apache-2.0 OR MIT
+
+-------------------------------------------------------------
+
+Name:        retain_mut
+Repository:  https://github.com/upsuper/retain_mut
+Authors:     Xidorn Quan
+License:     MIT
 
 -------------------------------------------------------------
 

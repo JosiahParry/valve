@@ -1,63 +1,58 @@
-use crate::pooling::*;
+use crate::plumber::*;
 
-use hyper::{client::HttpConnector};
+use hyper::client::HttpConnector;
 use rand::Rng;
 type Client = hyper::client::Client<HttpConnector, Body>;
 
-use axum::{
-    body::Body,
-    extract::{Extension, State},
-    http::Request,
-    response::{Redirect, Response},
-    routing::get,
-};
+use axum::{body::Body, extract::Extension, response::Redirect, routing::get};
 
 use std::time::Duration;
 
-use std::{
-    net::TcpListener,
-    process::{Command, Stdio},
-    sync::{Arc},
-};
+use std::{net::TcpListener, sync::Arc};
 
-pub async fn valve_start(filepath: String, host: String, port: u16, _n_max: usize) {
+use deadpool::managed;
+type Pool = managed::Pool<PrManager>;
+
+pub async fn valve_start(
+    filepath: String,
+    host: String,
+    port: u16,
+    n_max: usize,
+    check_interval: i32,
+    max_age: i32,
+) {
+    // determines how often to check connects
+    let interval = Duration::from_secs(check_interval.try_into().unwrap());
+    // determines how old a connection can be before being killed
+    let max_age = Duration::from_secs(max_age.try_into().unwrap());
+
     let filepath = Arc::new(filepath);
     let axum_host = Arc::new(host);
     let axum_port = port;
 
-
     // spawn client used for proxying
     let c = Client::new();
 
-
-    let plumber_manager = PrManager { 
-        host: axum_host.to_string(), 
-        pr_file: filepath.to_string() 
+    // create Pool manager
+    let plumber_manager = PrManager {
+        host: axum_host.to_string(),
+        pr_file: filepath.to_string(),
     };
 
-
+    // Build the Plumber API connection Pool
     let pool = Pool::builder(plumber_manager)
-        //.max_size(value)
-        //.timeouts(Timeouts::new())
-        //.wait_timeout(1000 * 10)
-        //.timeouts(60)
+        .max_size(n_max)
         .build()
         .unwrap();
 
-
-
+    // define the APP
     let app = axum::Router::new()
         .route("/", get(|| async { Redirect::permanent("/__docs__/") }))
         .route("/*key", axum::routing::any(plumber_handler))
         .with_state(c)
         .layer(Extension(pool.clone()));
 
-
-    // determines how often to check connects
-    let interval = Duration::from_secs(5);
-    // determines how old a connection can be before being killed
-    let max_age = Duration::from_secs(10);
-
+    // This thread is used to check if there are expired threads
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(interval).await;
@@ -82,41 +77,9 @@ pub async fn valve_start(filepath: String, host: String, port: u16, _n_max: usiz
         .unwrap();
 }
 
-// spawn plumber
-use std::io::{BufReader, BufRead};
-use std::process::Child;
-pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
-    let mut pr_child = Command::new("R")
-        .arg("-e")
-        .arg(format!(
-            "plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"
-        ))
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("Failed to start R process");
-
-    let stdout = pr_child.stderr.take().expect("stdout to be read");
-    let reader = BufReader::new(stdout);
-    
-    for line in reader.lines() {
-        if let Ok(line) = line {
-            //println!("{}", line);
-            if line.contains("Running swagger") {
-                std::thread::sleep(Duration::from_millis(100));
-                //println!("plumber started");
-                break;
-            }
-        }
-    }
-
-    pr_child
-    
-}
-
 // from chatGPT
-// these functions generate random
+// these functions generate random ports and
+// check if they are in use
 pub fn generate_random_port(host: &str) -> u16 {
     let mut rng = rand::thread_rng();
     loop {
@@ -126,6 +89,7 @@ pub fn generate_random_port(host: &str) -> u16 {
         }
     }
 }
+
 // checks to see if the port is available
 fn is_port_available(host: &str, port: u16) -> bool {
     match TcpListener::bind(format!("{host}:{port}")) {
@@ -137,27 +101,3 @@ fn is_port_available(host: &str, port: u16) -> bool {
         Err(_) => false, // The port is not available
     }
 }
-
-
-use deadpool::managed;
-type Pool = managed::Pool<PrManager>;
-
-async fn plumber_handler(
-    State(client): State<Client>,
-    Extension(pr_pool): Extension<Pool>,
-    req: Request<Body>
-) -> Response {
-
-    pr_pool.get()
-        .await
-        .unwrap()
-        .proxy_request(client, req).await
-
-}
-// It appears that what i need is a reverse proxy
-// tokio discord directed me to https://github.com/tokio-rs/axum/blob/v0.6.x/examples/reverse-proxy/src/main.rs
-// which is an example of this.
-// essentially a reverse proxy takes a request, sends, it and returns it (what i want)
-// this requires a client to make the request. so if thats the case, i may want to
-// have a single client spawned for each port (plumber API) and this can be part
-// of the state it can be a struct like struct Plumber{ port = u16, client = Client };

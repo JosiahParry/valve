@@ -11,7 +11,7 @@
 #' @useDynLib valve, .registration = TRUE
 NULL
 
-valve_run_ <- function(filepath, host, port, n_threads, workers) invisible(.Call(wrap__valve_run_, filepath, host, port, n_threads, workers))
+valve_run_ <- function(filepath, host, port, workers, n_max, check_interval, max_age) invisible(.Call(wrap__valve_run_, filepath, host, port, workers, n_max, check_interval, max_age))
 
 
 # nolint end

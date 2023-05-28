@@ -8,8 +8,10 @@ valve_run(
   filepath = "plumber.R",
   host = "127.0.0.1",
   port = 3000,
-  n_threads = 3,
-  workers = 3
+  n_max = 3,
+  workers = 3,
+  check_unused = 10,
+  max_age = 300
 )
 }
 \arguments{
@@ -20,10 +22,18 @@ the \code{file} argument of \code{plumber::plumb()}.}
 
 \item{port}{default \code{3000}. The port to host the valve app on.}
 
-\item{n_threads}{default \code{3}. The number of Plumber APIs to run in parallel.}
+\item{n_max}{default \code{3}. The maximum number of Plumber APIs to run in parallel.}
 
 \item{workers}{default \code{3}. The number of worker threads in the valve app to
 execute requests. This number should not be larger than \code{n_threads + 1}.}
+
+\item{check_unused}{default \code{10}. The time interval, in seconds, to check for
+unused connections.}
+
+\item{max_age}{default \code{300} (five minutes). Specifies how long a connection
+can go unused without being terminated. If a connection reaches this age
+it will be terminated in the next pool check
+(interval determined by \code{check_unused}),}
 }
 \description{
 Run a plumber API in parallel using valve. Plumber APIs are spawned on
@@ -36,4 +46,5 @@ if (interactive()) {
   plumber_api_path <- system.file("plumber.R", package = "valve")
   valve_run(plumber_api_path)
 }
+
 }

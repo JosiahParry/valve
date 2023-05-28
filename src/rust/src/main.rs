@@ -1,5 +1,5 @@
-use valve::start;
 use std::process::Stdio;
+use valve::start;
 
 use {argh::FromArgs, std::fmt::Debug};
 #[derive(FromArgs, Debug)]
@@ -13,17 +13,25 @@ struct Cli {
     #[argh(option, short = 'p', default = "3000")]
     port: u16,
 
-    /// number of plumber APIs to spawn
+    /// the maximum number of plumber APIs to spawn
     #[argh(option, short = 'n', default = "3")]
-    n_threads: u16,
+    n_max: u16,
 
-    /// number of Tokio workers to spawn
+    /// number of Tokio workers to spawn to handle requests
     #[argh(option, short = 'w', default = "3")]
     workers: u16,
 
     /// path to the plumber API (default `plumber.R`)
     #[argh(option, short = 'f', default = r#"String::from("plumber.R")"#)]
     file: String,
+
+    /// default 10. Interval in seconds when to check for unused connections
+    #[argh(option, default = "10")]
+    check_unused: u32,
+
+    /// default 5 mins. How long an API can go unused before being killed in seconds.
+    #[argh(option, default = "300")]
+    max_age: u32,
 }
 
 //#[tokio::main(worker_threads = 5)]
@@ -36,7 +44,7 @@ fn main() {
         panic!("plumber file does not exist.")
     }
 
-    if cli_args.n_threads < 1 {
+    if cli_args.n_max < 1 {
         panic!("Cannot have fewer than 1 plumber API")
     }
 
@@ -44,13 +52,14 @@ fn main() {
         panic!("Cannot have fewer than 1 worker thread")
     }
 
-    // run R --version if error things will panic
+    // verify that R is installed will panic if R isn't found (i hope)
     std::process::Command::new("R")
         .arg("--version")
         .stdout(Stdio::null())
         .spawn()
         .unwrap();
 
+    // verify that the plumber pcackage can be found
     let plumber_exists = std::process::Command::new("Rscript")
         .arg("-e")
         .arg("library(plumber)")
@@ -60,10 +69,12 @@ fn main() {
         .status
         .success();
 
+    // panic if plumber isn't found
     if !plumber_exists {
         panic!("plumber package cannot be found")
     }
 
+    // build the tokio runtime
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(cli_args.workers as usize)
         .enable_all()
@@ -74,22 +85,10 @@ fn main() {
                 cli_args.file,
                 cli_args.host,
                 cli_args.port,
-                0
-                //cli_args.n_threads,
+                cli_args.n_max.into(),
+                cli_args.check_unused.try_into().unwrap(),
+                cli_args.max_age.try_into().unwrap(),
             )
             .await;
         })
 }
-
-// This approach does not work because eval_string / R! block the thread
-// need a "detached child process"
-// fn spawn_plumber(port: u16, ports: Arc<Mutex<Vec<u16>>>) {
-//     start_r();
-//     ports.lock().unwrap().push(port);
-//     //let r_home = std::env::var("R_HOME").unwrap();
-//     //println!("R_HOME {r_home}");
-//     // Define R code to spawn the plumber API
-//     let plumb_call = format!(r#"plumber::pr_run(plumber::plumb("plumber.R"), port = {})"#, &port);
-//     // spawn the API
-//     let _plumb_spawn = eval_string(plumb_call.as_str());
-// }
