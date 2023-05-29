@@ -9,8 +9,7 @@
 #' @param vetiver_args additional arguments passed to `vetiver::vetiver_write_docker()` as
 #'  key-value pairs in a list object.
 #'
-#'  @returns
-#'  The content of the Dockerfile, invisibly.
+#' @returns The content of the Dockerfile, invisibly.
 #'
 valve_write_vetiver <- function(vetiver_model,
                                 plumber_file = "plumber.R",

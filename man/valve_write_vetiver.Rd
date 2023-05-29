@@ -26,10 +26,10 @@ expression like \code{'as.numeric(Sys.getenv("PORT"))'} when the port is injecte
 as an environment variable.}
 
 \item{vetiver_args}{additional arguments passed to \code{vetiver::vetiver_write_docker()} as
-key-value pairs in a list object.
-
-@returns
-The content of the Dockerfile, invisibly.}
+key-value pairs in a list object.}
+}
+\value{
+The content of the Dockerfile, invisibly.
 }
 \description{
 This function is a modification of \code{vetiver::vetiver_write_docker()} which utilizes
