@@ -6,3 +6,5 @@
 - difference between redirect and proxy
 - i sort of understand what a Cell is
 - I definitely understand Arc and Mutex now
+- I created my own feature flags! 
+    - TODO write a blog post on extendr packages with a binary / cli
