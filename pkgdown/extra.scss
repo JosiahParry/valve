@@ -1,0 +1,28 @@
+.bg-light {
+  //background-color: #38352c !important;
+  background-color: #444454 !important;
+}
+
+.navbar-expand-lg .navbar-nav .nav-link {
+  color: $gray-100;
+}
+
+.navbar-light .navbar-brand  {
+ color: $gray-100;
+}
+
+
+.navbar-brand + small.text-muted {
+  color: red;
+}
+
+.navbar-toggler {
+  background-color: #ffffff7a;
+}
+
+// change hover color
+// https://stackoverflow.com/questions/16625972/change-color-of-bootstrap-navbar-on-hover-link
+.navbar-nav .nav-item.active .nav-link,
+.navbar-nav .nav-item:hover .nav-link {
+    color: $gray-500;
+}

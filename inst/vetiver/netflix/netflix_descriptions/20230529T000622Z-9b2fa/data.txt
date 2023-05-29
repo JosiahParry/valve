@@ -1,0 +1,18 @@
+file: netflix_descriptions.rds
+file_size: 428962
+pin_hash: 9b2fa6bb5cb245b5
+type: rds
+title: 'netflix_descriptions: a pinned list'
+description: A LiblineaR classification modeling workflow
+tags: ~
+created: 20230529T000622Z
+api_version: 1.0
+user:
+  required_pkgs:
+  - LiblineaR
+  - parsnip
+  - recipes
+  - textrecipes
+  - themis
+  - workflows
+  renv_lock: ~

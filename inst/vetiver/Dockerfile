@@ -16,19 +16,20 @@ COPY vetiver_renv.lock renv.lock
 
 RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
-RUN Rscript -e "install.packages('remotes')"
+
 
 RUN apt-get install -y -q \
     build-essential \
     curl
-# Get Rust; NOTE: using sh for better compatibility with other base images
+
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 
-# Add .cargo/bin to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo install --git https://github.com/josiahparry/valve/ --no-default-features
 
-RUN Rscript -e "remotes::install_github('josiahparry/valve', upgrade = FALSE)"
 
-RUN export VALVE=$(Rscript -e "cat(system.file('valve', package = 'valve'))")
+ADD cars_linear /opt/ml/cars_linear
+COPY plumber.R /opt/ml/plumber.R
+
 EXPOSE 3000
-ENTRYPOINT $(Rscript -e "cat(system.file('valve', package = 'valve'))") -h "0.0.0.0"
+ENTRYPOINT valve -h 0.0.0.0 -f /opt/ml/plumber.R

@@ -1,2 +1,6 @@
-unknown flag: --progress
-See 'docker run --help'.
+Spawning plumber API at 0.0.0.0:26009
+thread 'tokio-runtime-worker' panicked at 'called `Result::unwrap()` on an `Err` value: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" }))', /root/.cargo/git/checkouts/valve-8bcf042d1214ff3f/b128c68/src/rust/src/plumber.rs:65:35
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread 'tokio-runtime-worker' panicked at 'called `Result::unwrap()` on an `Err` value: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" }))', /root/.cargo/git/checkouts/valve-8bcf042d1214ff3f/b128c68/src/rust/src/plumber.rs:65:35
+thread 'tokio-runtime-worker' panicked at 'called `Result::unwrap()` on an `Err` value: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" }))', /root/.cargo/git/checkouts/valve-8bcf042d1214ff3f/b128c68/src/rust/src/plumber.rs:65:35
+^C

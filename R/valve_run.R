@@ -10,8 +10,8 @@
 #' @param host default `"127.0.0.1"`. Where to host the valve app and Plumber APIs.
 #' @param port default `3000`. The port to host the valve app on.
 #' @param n_max default `3`. The maximum number of Plumber APIs to run in parallel.
-#' @param workers default `3`. The number of worker threads in the valve app to
-#'    execute requests. This number should not be larger than `n_threads + 1`.
+#' @param workers default `n_max`. The number of worker threads in the valve app to
+#'    execute requests. This number should typically mimic `n_max`.
 #' @param check_unused default `10`. The time interval, in seconds, to check for
 #'    unused connections.
 #' @param max_age default `300` (five minutes). Specifies how long a connection
@@ -31,7 +31,7 @@ valve_run <- function(filepath = "plumber.R",
                       host = "127.0.0.1",
                       port = 3000,
                       n_max = 3,
-                      workers = 3,
+                      workers = n_max,
                       check_unused = 10,
                       max_age = 300
                       ) {

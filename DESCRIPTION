@@ -10,6 +10,8 @@ Description: Scales Plumber APIs in parallel on demand. Valve is a Rust library,
   connections are terminated. Valve is built using the powerful extendr, tokio,
   and deadpool libraries. 
 License: BSD_3_clause + file LICENSE
+URL: https://github.com/JosiahParry/valve
+BugReports: https://github.com/JosiahParry/valve/issues/
 Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
@@ -17,3 +19,5 @@ RoxygenNote: 7.2.3
 Config/rextendr/version: 0.2.0.9000
 Imports: 
     plumber
+Suggests: 
+    vetiver

@@ -9,7 +9,7 @@ valve_run(
   host = "127.0.0.1",
   port = 3000,
   n_max = 3,
-  workers = 3,
+  workers = n_max,
   check_unused = 10,
   max_age = 300
 )
@@ -24,8 +24,8 @@ the \code{file} argument of \code{plumber::plumb()}.}
 
 \item{n_max}{default \code{3}. The maximum number of Plumber APIs to run in parallel.}
 
-\item{workers}{default \code{3}. The number of worker threads in the valve app to
-execute requests. This number should not be larger than \code{n_threads + 1}.}
+\item{workers}{default \code{n_max}. The number of worker threads in the valve app to
+execute requests. This number should typically mimic \code{n_max}.}
 
 \item{check_unused}{default \code{10}. The time interval, in seconds, to check for
 unused connections.}

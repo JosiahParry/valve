@@ -1,0 +1,11 @@
+url: ~
+template:
+  bootstrap: 5
+  bslib:
+    heading_font: {google: "Noto Sans Display"}
+    code_font: {google: "IBM Plex Mono"}
+    base_font: {google: "Noto Sans Display"}
+
+navbar:
+  structure:
+    right:  [search, github]

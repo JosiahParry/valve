@@ -4,7 +4,7 @@ library(pins)
 library(plumber)
 library(rapidoc)
 library(vetiver)
-b <- board_folder(path = "inst/vetiver")
+b <- board_folder(path = ".")
 v <- vetiver_pin_read(b, "cars_linear")
 
 #* @plumber

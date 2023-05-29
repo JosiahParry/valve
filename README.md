@@ -1,6 +1,8 @@
 # Valve
 
-`valve` creates multi-threaded [plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks.
+> _Redirects your plumbing for you. _
+
+`valve` creates multi-threaded [Plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks.
 
 ## Motivation
 
