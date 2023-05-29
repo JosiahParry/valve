@@ -14,9 +14,10 @@ axum = { version = "*", features = ["tokio"]}
 hyper = { version = "0.14.26", features = ["client"] } 
 rand = "0.8.5"
 tokio = { version = "1.28.1", features = ["io-util", "macros", "rt-multi-thread", "signal"] }
-extendr-api = '*'
+extendr-api = {version = '0.4.0', optional = true }
 deadpool = "0.9.5"
 async-trait = "0.1.68"
 
-
-
+[features]
+default = ["rlib"]
+rlib = ["dep:extendr-api"]

@@ -4,8 +4,10 @@ pub mod start;
 pub use plumber::*;
 pub use start::*;
 
+#[cfg(feature = "rlib")]
 use extendr_api::prelude::*;
 
+#[cfg(feature = "rlib")]
 #[extendr]
 pub fn valve_run_(
     filepath: String,
@@ -37,6 +39,7 @@ pub fn valve_run_(
         });
 }
 
+#[cfg(feature = "rlib")]
 extendr_module! {
     mod valve;
     fn valve_run_;
