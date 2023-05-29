@@ -24,7 +24,7 @@ When the R package is built it also includes the binary executable at `inst/valv
 To install the executable only run
 
 ```bash
-cargo install --git https://github.com/josiahparry/valve/
+cargo install --git https://github.com/josiahparry/valve/ --no-default-features
 ```
 
 ## Creating the app
@@ -44,11 +44,6 @@ valve_run(plumber_api_path, n_max = 5, workers = 5)
 `n_max` refers to the maximum number of background Plumber APIs will be spawned whereas `workers` specifies how many main worker threads are available to handle incoming requests. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
 
 Running this from your R session will block the session. If you are comfortable, it is recommended to install the cli so you can run them from your terminal so that you can call the plumber APIs from your R session.
-
-```bash
-# the same as the above but from the terminal
-valve -f $(Rscript -e "cat(system.file('plumber.R', package = 'valve'))") -n 5 -w 5
-```
 
 ## Calling valve with multiple workers
 
