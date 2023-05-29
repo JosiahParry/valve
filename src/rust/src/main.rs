@@ -81,6 +81,7 @@ fn main() {
         .build()
         .unwrap()
         .block_on(async {
+            println!("Valve starting at: {}:{}", cli_args.host, cli_args.port);
             start::valve_start(
                 cli_args.file,
                 cli_args.host,

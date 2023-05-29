@@ -31,8 +31,15 @@ pub struct Plumber {
 impl Plumber {
     pub fn spawn(host: &str, filepath: &str) -> Self {
         let port = generate_random_port(host);
+
+        #[cfg(debug_assertions)]
+        println!("about to spawn plumber");
+
         let process = spawn_plumber(host, port, filepath);
+        
+        #[cfg(debug_assertions)]
         println!("Spawning plumber API at {host}:{port}");
+
         Self {
             host: host.to_string(),
             port,
@@ -59,6 +66,8 @@ impl Plumber {
                 .unwrap(),
         );
 
+        #[cfg(debug_assertions)]
+        println!("about to proxy");
         // TODO enable https or other schemes
         uri.scheme = Some("http".parse().unwrap());
         *req.uri_mut() = Uri::from_parts(uri).unwrap();
@@ -119,6 +128,9 @@ pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
         .spawn()
         .expect("Failed to start R process");
 
+    #[cfg(debug_assertions)]
+    println!("theoretically have spawned plumber");
+
     // capture stderr
     let stderr = pr_child.stderr.take().expect("stdout to be read");
     let reader = BufReader::new(stderr);
@@ -126,7 +138,7 @@ pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
     // read lines from buffer. when "Running swagger" is captured
     // then we sleep for 1/10th of a second to let the api start and continue
     for line in reader.lines().flatten() {
-        if line.contains("Running swagger") {
+        if line.contains("Running swagger") || line.contains("Running rapidoc") {
             std::thread::sleep(Duration::from_millis(100));
             break;
         }
@@ -141,6 +153,10 @@ pub async fn plumber_handler(
     Extension(pr_pool): Extension<Pool>,
     req: Request<Body>,
 ) -> Response {
+
+    #[cfg(debug_assertions)]
+    println!("accessing handler");
+
     pr_pool
         .get()
         .await
