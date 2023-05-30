@@ -37,11 +37,13 @@ library(valve)
 # get included plumber API path
 plumber_api_path <- system.file("plumber.R", package = "valve")
 
-valve_run(plumber_api_path, n_max = 5, workers = 5)
+valve_run(plumber_api_path, n_max = 5)
 #> Docs hosted at <http://127.0.0.1:3000/__docs__/>
 ```
 
-`n_max` refers to the maximum number of background Plumber APIs will be spawned whereas `workers` specifies how many main worker threads are available to handle incoming requests. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
+`n_max` refers to the maximum number of background Plumber APIs that can be spawned whereas `workers` specifies how many main worker threads are available to handle incoming requests. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. This is the default. If `workers` is less than `n_max`, you'll never spawn the maximum number of APIs.
+
+Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
 
 Running this from your R session will block the session. If you are comfortable, it is recommended to install the cli so you can run them from your terminal so that you can call the plumber APIs from your R session.
 
@@ -135,4 +137,4 @@ Sample standard deviation 2ms
 
 ### With all that said....
 
-valve is best suited for light-ish work loads. Each background plumber API will hold their own copy of their R objects. So if you are serving a machine learning model that is a GB big, that model will have to be copied into each thread and that can be quickly bloat up your ram. So be smart! If you have massive objects in your R session, try and reduce the clutter and thin it out. 
+valve is best suited for light to medium sized work loads. Each background plumber API will hold their own copy of their R objects. So if you are serving a machine learning model that is a GB big, that model will have to be copied into each thread and that can be quickly bloat up your ram. So be smart! If you have massive objects in your R session, try and reduce the clutter and thin it out. 

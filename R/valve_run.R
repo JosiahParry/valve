@@ -37,12 +37,11 @@ valve_run <- function(filepath = "plumber.R",
                       ) {
 
   stopifnot(
-    "`n_threads` cannot be fewer than 1" =  n_max > 1,
+    "`n_max` cannot be fewer than 1" =  n_max > 1,
     "`workers` cannot be fewer than 1" =  workers > 1,
     "`max_age` cannot be less than `check_unused`" = check_unused < max_age,
     "plumber file cannot be found" = file.exists(filepath)
   )
-
 
   docs <- paste0("http://", host, ":", port)
   cat(paste0("Valve app hosted at \033]8;;", docs, "\a<", docs, ">\033]8;;\a\n"))

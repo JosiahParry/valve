@@ -37,7 +37,7 @@ impl Plumber {
 
         let process = spawn_plumber(host, port, filepath);
         
-        #[cfg(debug_assertions)]
+//        #[cfg(debug_assertions)]
         println!("Spawning plumber API at {host}:{port}");
 
         Self {
