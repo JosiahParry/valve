@@ -6,7 +6,7 @@ use deadpool::managed;
 
 use std::{
     io::{BufRead, BufReader},
-    process::{Command, Stdio},
+    process::{Command, Stdio, Child},
     time::Duration,
 };
 
@@ -21,24 +21,26 @@ use hyper::{client::HttpConnector, Uri};
 type Client = hyper::client::Client<HttpConnector, Body>;
 
 // Define the Plumber Struct
-pub struct Plumber {
+pub struct Shiny {
     pub host: String,
     pub port: u16,
     pub process: std::process::Child,
 }
 
+
+
 // Plumber methods for spawning, checking alive status and killing
-impl Plumber {
-    pub fn spawn(host: &str, filepath: &str) -> Self {
+impl Shiny {
+    pub fn spawn(host: &str, app_dir: &str) -> Self {
         let port = generate_random_port(host);
 
         #[cfg(debug_assertions)]
-        println!("about to spawn plumber");
+        println!("about to spawn shiny");
 
-        let process = spawn_plumber(host, port, filepath);
+        let process = spawn_shiny(host, port, app_dir);
         
 //        #[cfg(debug_assertions)]
-        println!("Spawning plumber API at {host}:{port}");
+        println!("Spawning Shiny App at {host}:{port}");
 
         Self {
             host: host.to_string(),
@@ -67,7 +69,7 @@ impl Plumber {
         );
 
         #[cfg(debug_assertions)]
-        println!("about to proxy plumber");
+        println!("about to proxy shiny");
         // TODO enable https or other schemes
         uri.scheme = Some("http".parse().unwrap());
         *req.uri_mut() = Uri::from_parts(uri).unwrap();
@@ -75,52 +77,44 @@ impl Plumber {
     }
 }
 
-// This struct will contain the iterator that is used in the axum
-// app to cycle through ports. though that might not be necessary
-// since the Plumber struct contains the port
-// the plumber struct will be returned by the pool and
-// can be used in the axum route directly
 
-pub struct PrManager {
+pub struct ShinyManager {
     //    ports: Arc<Mutex<Cycle<std::vec::IntoIter<u16>>>>
     pub host: String,
-    pub pr_file: String,
+    pub app_dir: String,
 }
 
-#[derive(Debug)]
-pub enum Error {
-    Fail,
-}
-
+use crate::plumber::Error;
 #[async_trait]
-impl managed::Manager for PrManager {
-    type Type = Plumber;
+impl managed::Manager for ShinyManager {
+    type Type = Shiny;
     type Error = Error;
 
-    async fn create(&self) -> Result<Plumber, Error> {
+    async fn create(&self) -> Result<Shiny, Error> {
         let host = self.host.as_str();
-        let filepath = self.pr_file.as_str();
-        Ok(Plumber::spawn(host, filepath))
+        let app_dir = self.app_dir.as_str();
+        Ok(Shiny::spawn(host, app_dir))
     }
 
-    async fn recycle(&self, _conn: &mut Plumber) -> managed::RecycleResult<Error> {
+    async fn recycle(&self, _conn: &mut Shiny) -> managed::RecycleResult<Error> {
         Ok(())
     }
 
-    fn detach(&self, obj: &mut Plumber) {
+    fn detach(&self, obj: &mut Shiny) {
         let _killed_process = obj.process.kill();
     }
 }
 
-// spawn plumber
-use std::process::Child;
-pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
+// Might have to check requests to see what port they were coming from
+// if that doesnt exist we will inject that into the header if it doesnt exist
+// read it isf it does and redirect to the appropriate one that way state can be persisteted?
+pub fn spawn_shiny(host: &str, port: u16, app_dir: &str) -> Child {
     // start the R processes
-    let mut pr_child = Command::new("R")
+    let mut shiny_child = Command::new("R")
         .arg("-e")
-        // the defines the R command that is used to start plumber
+        // the defines the R command that is used to start shiny
         .arg(format!(
-            "plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"
+            "shiny::runApp('{app_dir}', {port}, host = '{host}')"
         ))
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -129,38 +123,20 @@ pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
         .expect("Failed to start R process");
 
     #[cfg(debug_assertions)]
-    println!("theoretically have spawned plumber");
+    println!("theoretically have spawned shiny");
 
     // capture stderr
-    let stderr = pr_child.stderr.take().expect("stdout to be read");
+    let stderr = shiny_child.stderr.take().expect("stdout to be read");
     let reader = BufReader::new(stderr);
 
     // read lines from buffer. when "Running swagger" is captured
     // then we sleep for 1/10th of a second to let the api start and continue
     for line in reader.lines().flatten() {
-        if line.contains("Running swagger") || line.contains("Running rapidoc") {
+        if line.contains("Listening on") {
             std::thread::sleep(Duration::from_millis(100));
             break;
         }
     }
 
-    pr_child
-}
-
-type Pool = managed::Pool<PrManager>;
-pub async fn plumber_handler(
-    State(client): State<Client>,
-    Extension(pr_pool): Extension<Pool>,
-    req: Request<Body>,
-) -> Response {
-
-    #[cfg(debug_assertions)]
-    println!("accessing handler");
-
-    pr_pool
-        .get()
-        .await
-        .unwrap()
-        .proxy_request(client, req)
-        .await
+    shiny_child
 }

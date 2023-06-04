@@ -1,6 +1,8 @@
 pub mod plumber;
 pub mod start;
 
+pub mod shiny;
+
 pub use plumber::*;
 pub use start::*;
 
