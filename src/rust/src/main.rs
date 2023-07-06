@@ -82,7 +82,7 @@ fn main() {
         .unwrap()
         .block_on(async {
             println!("Valve starting at: {}:{}", cli_args.host, cli_args.port);
-            start::valve_start(
+            start::valve_start_plumber_(
                 cli_args.file,
                 cli_args.host,
                 cli_args.port,

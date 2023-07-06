@@ -1,20 +1,20 @@
-use crate::plumber::*;
+use crate::shiny::*;
 
 use hyper::client::HttpConnector;
-use rand::Rng;
+
 type Client = hyper::client::Client<HttpConnector, Body>;
 
-use axum::{body::Body, extract::Extension, response::Redirect, routing::get};
+use axum::{body::Body, extract::Extension};
 
 use std::time::Duration;
 
-use std::{net::TcpListener, sync::Arc};
+use std::sync::Arc;
 
 use deadpool::managed;
-type Pool = managed::Pool<PrManager>;
+type Pool = managed::Pool<ShinyManager>;
 
-pub async fn valve_start(
-    filepath: String,
+pub async fn valve_start_shiny_(
+    app_dir: String,
     host: String,
     port: u16,
     n_max: usize,
@@ -26,7 +26,7 @@ pub async fn valve_start(
     // determines how old a connection can be before being killed
     let max_age = Duration::from_secs(max_age.try_into().unwrap());
 
-    let filepath = Arc::new(filepath);
+    let app_dir = Arc::new(app_dir);
     let axum_host = Arc::new(host);
     let axum_port = port;
 
@@ -34,21 +34,18 @@ pub async fn valve_start(
     let c = Client::new();
 
     // create Pool manager
-    let plumber_manager = PrManager {
+    let manager = ShinyManager {
         host: axum_host.to_string(),
-        pr_file: filepath.to_string(),
+        app_dir: app_dir.to_string(),
     };
 
     // Build the Plumber API connection Pool
-    let pool = Pool::builder(plumber_manager)
-        .max_size(n_max)
-        .build()
-        .unwrap();
+    let pool = Pool::builder(manager).max_size(n_max).build().unwrap();
 
     // define the APP
     let app = axum::Router::new()
-        .route("/", get(|| async { Redirect::permanent("/__docs__/") }))
-        .route("/*key", axum::routing::any(plumber_handler))
+        .route("/", axum::routing::any(shiny_handler))
+        //.route("/*key", axum::routing::any(shiny_handler))
         .with_state(c)
         .layer(Extension(pool.clone()));
 
@@ -60,7 +57,7 @@ pub async fn valve_start(
                 let too_old = metrics.last_used() < max_age;
 
                 if !too_old {
-                    println!("Killing plumber API at {}:{}", pr.host, pr.port);
+                    println!("Killing Shiny App at {}:{}", pr.host, pr.port);
                 }
 
                 too_old
@@ -75,30 +72,4 @@ pub async fn valve_start(
         .serve(app.into_make_service())
         .await
         .unwrap();
-
-}
-
-// from chatGPT
-// these functions generate random ports and
-// check if they are in use
-pub fn generate_random_port(host: &str) -> u16 {
-    let mut rng = rand::thread_rng();
-    loop {
-        let port: u16 = rng.gen_range(1024..=65535);
-        if is_port_available(host, port) {
-            return port;
-        }
-    }
-}
-
-// checks to see if the port is available
-fn is_port_available(host: &str, port: u16) -> bool {
-    match TcpListener::bind(format!("{host}:{port}")) {
-        Ok(listener) => {
-            // The port is available, so we close the listener and return true
-            drop(listener);
-            true
-        }
-        Err(_) => false, // The port is not available
-    }
 }

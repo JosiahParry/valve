@@ -1,9 +1,8 @@
 pub mod plumber;
-pub mod start;
-
 pub mod shiny;
-
+pub mod start;
 pub use plumber::*;
+pub use shiny::*;
 pub use start::*;
 
 #[cfg(feature = "rlib")]
@@ -19,18 +18,20 @@ pub fn valve_run_(
     n_max: u16,
     check_interval: i32,
     max_age: i32,
+    shiny: bool,
 ) {
     let workers = workers as usize;
     let n_max = n_max as usize;
-    tokio::runtime::Builder::new_multi_thread()
+    let rt = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
         .enable_all()
         .build()
-        .unwrap()
-        .block_on(async {
+        .unwrap();
+
+    if shiny {
+        rt.block_on(async {
             tokio::select! {
-                _ = valve_start(filepath, host, port, n_max, check_interval, max_age) => {
-                }
+                _ = valve_start_shiny_(filepath, host, port, n_max, check_interval, max_age) => {}
                 r = tokio::signal::ctrl_c() => {
                     match r {
                         Ok(()) => {/* cancelled */}
@@ -39,6 +40,19 @@ pub fn valve_run_(
                 }
             };
         });
+    } else {
+        rt.block_on(async {
+            tokio::select! {
+                _ = valve_start_plumber_(filepath, host, port, n_max, check_interval, max_age) => {}
+                r = tokio::signal::ctrl_c() => {
+                    match r {
+                        Ok(()) => {/* cancelled */}
+                        Err(e) => eprintln!("Unable to listen for shutdown signal: {e}"),
+                    }
+                }
+            };
+        });
+    }
 }
 
 #[cfg(feature = "rlib")]

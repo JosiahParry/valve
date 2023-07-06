@@ -6,7 +6,7 @@ use deadpool::managed;
 
 use std::{
     io::{BufRead, BufReader},
-    process::{Command, Stdio, Child},
+    process::{Child, Command, Stdio},
     time::Duration,
 };
 
@@ -27,8 +27,6 @@ pub struct Shiny {
     pub process: std::process::Child,
 }
 
-
-
 // Plumber methods for spawning, checking alive status and killing
 impl Shiny {
     pub fn spawn(host: &str, app_dir: &str) -> Self {
@@ -38,8 +36,8 @@ impl Shiny {
         println!("about to spawn shiny");
 
         let process = spawn_shiny(host, port, app_dir);
-        
-//        #[cfg(debug_assertions)]
+
+        //        #[cfg(debug_assertions)]
         println!("Spawning Shiny App at {host}:{port}");
 
         Self {
@@ -77,14 +75,15 @@ impl Shiny {
     }
 }
 
-
 pub struct ShinyManager {
     //    ports: Arc<Mutex<Cycle<std::vec::IntoIter<u16>>>>
     pub host: String,
     pub app_dir: String,
 }
 
+// import the simple
 use crate::plumber::Error;
+
 #[async_trait]
 impl managed::Manager for ShinyManager {
     type Type = Shiny;
@@ -139,4 +138,18 @@ pub fn spawn_shiny(host: &str, port: u16, app_dir: &str) -> Child {
     }
 
     shiny_child
+}
+
+// specify the type for shiny start
+type Pool = managed::Pool<ShinyManager>;
+
+pub async fn shiny_handler(
+    State(client): State<Client>,
+    Extension(pool): Extension<Pool>,
+    req: Request<Body>,
+) -> Response {
+    #[cfg(debug_assertions)]
+    println!("accessing shiny handler");
+
+    pool.get().await.unwrap().proxy_request(client, req).await
 }

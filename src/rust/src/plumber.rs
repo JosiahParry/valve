@@ -36,8 +36,8 @@ impl Plumber {
         println!("about to spawn plumber");
 
         let process = spawn_plumber(host, port, filepath);
-        
-//        #[cfg(debug_assertions)]
+
+        //        #[cfg(debug_assertions)]
         println!("Spawning plumber API at {host}:{port}");
 
         Self {
@@ -153,7 +153,6 @@ pub async fn plumber_handler(
     Extension(pr_pool): Extension<Pool>,
     req: Request<Body>,
 ) -> Response {
-
     #[cfg(debug_assertions)]
     println!("accessing handler");
 
