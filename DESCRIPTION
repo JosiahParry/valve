@@ -10,7 +10,7 @@ Description: Scales Plumber APIs in parallel on demand. Valve is a Rust library,
   connections are terminated. Valve is built using the powerful extendr, tokio,
   and deadpool libraries. 
 License: BSD_3_clause + file LICENSE
-URL: https://github.com/JosiahParry/valve
+URL: https://github.com/JosiahParry/valve, https://josiahparry.r-universe.dev/valve
 BugReports: https://github.com/JosiahParry/valve/issues/
 Encoding: UTF-8
 Language: en
