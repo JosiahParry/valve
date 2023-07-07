@@ -2,7 +2,9 @@
 
 > _Redirects your plumbing for you. _
 
-`valve` creates multi-threaded [Plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks.
+`valve` creates multi-threaded [Plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks. Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
+
+Valve is a Rust CLI with an accompanying R package. Running Valve from an R session will block the session. If you are comfortable, it is recommended to install the cli so you can run Valve from your terminal so that you can call the plumber APIs from your R session.
 
 ## Motivation
 
@@ -11,9 +13,15 @@ Plumber is an R package that creates RESTful APIs from R functions. It is limite
 
 ## Installation
 
-Install the R package using {remotes}. Note that this will compile the package from source which will require Rust to be installed. If you don't have rust installed follow the instructions [here](https://www.rust-lang.org/tools/install). _Rust is the second easiest programming language to install after R_. 
+### Cli Instructions
+To install the executable only run
 
-> I also recommend installing the development version of {rextendr} via `pak::pak("extendr/rextendr")` which provides the function `rextendr::rust_sitrep()` which will update you on if you have a compatible Rust installation.
+```bash
+cargo install --git https://github.com/josiahparry/valve/ --no-default-features
+```
+### R package instructions
+
+There is an R package to simplify the use of Valve for those who are not familiar with Rust or CLI tools. Install the R package using `{remotes}`. Note that this will compile the package from source which will require Rust to be installed. If you don't have rust installed follow the instructions [here](https://www.rust-lang.org/tools/install). _Rust is the second easiest programming language to install after R_. 
 
 ```r
 remotes::install_github("josiahparry/valve")
@@ -21,16 +29,10 @@ remotes::install_github("josiahparry/valve")
 
 When the R package is built it also includes the binary executable at `inst/valve`. So if you ever find yourself needing the executable `system.file("valve", package = "valve")` will point you right to it! This will always be the version of the executable that your R package is using.
 
-To install the executable only run
 
-```bash
-cargo install --git https://github.com/josiahparry/valve/ --no-default-features
-```
+## Creating a Valve app
 
-## Creating the app
-
-The R package exports only 1 function: `valve_run()`. The most important argument is `filepath` which determines which Plumber API will be executed as well as specifying the `host` and `port` to determine _where_ your app will run. Additional configuration can be done with the `n_max`, `workers`, `check_unused`, and `max_age` argument to specify _how_ your app will scale.
-
+To run a plumber API concurrently using the R package, use `valve_run()`. The most important argument is `filepath` which determines which Plumber API will be executed as well as specifying the `host` and `port` to determine _where_ your app will run. Additional configuration can be done with the `n_max`, `workers`, `check_unused`, and `max_age` argument to specify _how_ your app will scale. By default, the app will be run on host `127.0.0.1` and on port `3000`.
 
 ```r
 library(valve)
@@ -41,17 +43,80 @@ valve_run(plumber_api_path, n_max = 5)
 #> Docs hosted at <http://127.0.0.1:3000/__docs__/>
 ```
 
-`n_max` refers to the maximum number of background Plumber APIs that can be spawned whereas `workers` specifies how many main worker threads are available to handle incoming requests. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. This is the default. If `workers` is less than `n_max`, you'll never spawn the maximum number of APIs.
+Using the cli:
 
-Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
+```shell
+valve -f plumber.R -n 5 
+```
 
-Running this from your R session will block the session. If you are comfortable, it is recommended to install the cli so you can run them from your terminal so that you can call the plumber APIs from your R session.
+### Understanding the parameters: 
 
-## Calling valve with multiple workers
+The arguments that you provide determines how Valve will scale up and down the application is requests come in. 
+
+- `host` (`--host`): 
+  - defaults to `127.0.0.1`. Defines which host the Axum app and the plumber API will be hosted on.
+- `port` (`--port`): 
+  - defaults to `3000`. Defines which port the main Axum app will be listening on.
+- `file` (`--file`): 
+  - defaults to `plumber.R`. The path to the R script that defines the plumber API.
+- `workers` (`--workers`): 
+  - default `3`. Determines how many workers are set in the [Tokio `Runtime`](https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.worker_threads). These workers handle incoming requests and return responses. 
+- `n_max` (`--n-max`): 
+  - default `3`. Refers to the maximum number of background Plumber APIs that can be spawned whereas `workers` specifies how many main worker threads are available to handle incoming requests. Generally, the number of `workers` should be equal to the number of plumber APIs since because plumber is single threaded. This is the default. If `workers` is less than `n_max`, you'll never spawn the maximum number of APIs.
+- `check_unused` (`--check-unused`): 
+  - default `10`. The time interval, in seconds, to check for unused connections.
+- `max_age` (`--max-age`):
+  - default `300` (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused),
+
+
+
+
+
+
+
+<!--
+## How it all works
+
+By default, valve creates an app hosted at  `127.0.0.1:3000`. 
+It looks for a file called `plumber.R` in the working directory. 
+
+The app that is spun up has 3 Axum workers (`workers`) which handle the incoming requests. 
+The app also will create a pool of `n-max` plumber APIs which too is set to 3. 
+The number of workers and the maximum number of plumber APIs should, generally,
+be the same. If there are more workers than API connections, then there will be 
+a worker waiting for a plumber API connection to free up before it can be used. 
+-->
+
+## Example: Calling valve with multiple workers
 
 The way valve works is by accepting requests on a main port (3000 by default) and then distributing the requests round robin to the plumber APIs that are spawned on random ports. Requests are captured by `axum` and proxied to a plumber API process.
 
-First I'm going to define a function to call my `/sleep` endpoint. The function will take two parameters: the port and the duration of sleep. The port will be used to change between the valve app and a single plumber API.
+You can run the example plumber API included with Valve in the background in R using this code chunk:
+
+```r
+# create temp file
+tmp <- tempfile(fileext = ".R")
+
+# create script lines
+valve_script <- '
+plumber_api_path <- system.file("plumber.R", package = "valve")
+valve::valve_run(plumber_api_path, workers = 5)
+'
+# write to temp
+writeLines(valve_script, tmp)
+
+# run in the background
+rstudioapi::jobRunScript(tmp)
+```
+
+Or launch it directly from the terminal via: 
+
+```shell
+valve -f $(Rscript -e 'cat(system.file("plumber.R", package = "valve"))')
+```
+
+Once the Valve app is running in the background we can begin the example. First I'm going to define a function to call the `/sleep` endpoint. The function will take two parameters: the port and the duration of sleep. The port will be used to change between the valve app and a single plumber API.
+
 
 ```r
 sleep <- function(port, secs) {
@@ -70,7 +135,8 @@ library(furrr)
 plan(multisession, workers = 5)
 ```
 
-First, we'll ping the main valve app which will distribute requests round robin.
+First, we'll ping the main valve app which will distribute requests. The first time
+this is ran might be slow since there will not be any plumber APIs in the pool yet.
 
 ```r
 start <- Sys.time()
@@ -82,7 +148,7 @@ Next, we select only one of the available plumber APIs and query it.
 
 ```r
 start <- Sys.time()
-single_sleep <- furrr::future_map(1:5, ~ sleep(35219, 2))
+single_sleep <- furrr::future_map(1:5, ~ sleep(53869, 2))
 single_total <- Sys.time() - start
 ```
 Notice the performance difference. 
