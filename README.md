@@ -164,6 +164,36 @@ print(paste0("One Plumber API: ", round(single_total, 2)))
 
 In the former each worker gets to make the request in approximately the same amount of time. The latter has to wait for each subsequent step to finish before the next one can occur. So we've effectively distributed the work load. 
 
+## How Valve Works
+
+The architecture, at a high level, is captured by this diagram. 
+
+![](man/figures/valve-diagram.png)
+
+There are really three key components to this: 
+
+- the Tokio `Runtime`,
+- the Axum `Router`, 
+- and the connection `Pool`.  
+
+### Request handling
+
+The tokio [`Runtime`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html) is what allows Valve to be asynchronous. It handles I/O, tasks, and all that jazz. It is also what backs `Axum`. In Valve, we [define an asynchronous runtime](https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/lib.rs#L23) with a pre-defined number of `workers`. These workers are what handle the incoming requests. 
+
+When a request is picked up, it is then sent to the Axum [`Router`](https://docs.rs/axum/latest/axum/struct.Router.html). The router takes the incoming requests and sends them to the appropriate endpoint. 
+
+The routes that are defined are `/` and `/*key`. `/` is a permanent redirect to the plumber API documentation. Whereas `/*key` captures every other request. These requests have a special handler that, in short, act as a reverse proxy between Axum and a plumber API. The handler captures the request and grabs a Plumber connection from the [`Pool`](https://docs.rs/deadpool/latest/deadpool/managed/struct.Pool.html). The [Plumber struct](https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/plumber.rs#L24) contains the host and port that the APIs live on. The request is then parsed, and redirected to the plumber API. The [response is captured and returned as a response](https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/plumber.rs#L74) to the Axum router.
+
+
+### Connection pooling
+
+Valve implements a custom [managed](https://docs.rs/deadpool/latest/deadpool/managed/index.html) Pool for plumber APIs. The pool consists of `Plumber` struct which contain the host, port, and the [child process](https://doc.rust-lang.org/std/process/struct.Child.html). 
+
+When Deadpool spawns a new connection for the pool, it thus spawns a new plumber API. This is done using [`Command::new()`](https://doc.rust-lang.org/std/process/struct.Command.html) to create a detached child process. A random port is generated, checked, and then assigned to the plumber API. Then the process is started by calling `R -e "plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"` via `Command`. This means that _R must be on the path_ and that if there are multiple installs of R, whichever one is on the path will be used.
+
+To prevent plumber APIs being spawned too frequently they are kept alive for duration defined by `max_age`. A connection can be unused for that duration. If it exceeds that age without being used, Deadpool will prune the connection and terminate the process. This check happens on a [separate thread](https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/start.rs#L56C4-L56C4) occurring every `check_unused` seconds. 
+
+
 ## Benchmarks with drill
 
 Simple benchmarks using drill can be found in `inst/bench-sleep-plumber.yml` and `bench-sleep-valve.yml`. 
