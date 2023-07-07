@@ -27,7 +27,9 @@ There is an R package to simplify the use of Valve for those who are not familia
 remotes::install_github("josiahparry/valve")
 ```
 
+<!--
 When the R package is built it also includes the binary executable at `inst/valve`. So if you ever find yourself needing the executable `system.file("valve", package = "valve")` will point you right to it! This will always be the version of the executable that your R package is using.
+-->
 
 
 ## Creating a Valve app
