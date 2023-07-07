@@ -27,8 +27,9 @@ $(STATLIB):
 	fi && \
 		export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$(CARGO_LINKER)" && \
 		export LIBRARY_PATH="$${LIBRARY_PATH};$(CURDIR)/$(TARGET_DIR)/libgcc_mock" && \
-				cargo build --lib --bin valve --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR) && \
-			cp $(LIBDIR)/valve ../inst;
+				cargo build --lib --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR)
+#				cargo build --lib --bin valve --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR) && \
+#			cp $(LIBDIR)/valve ../inst;
 	if [ "$(NOT_CRAN)" != "true" ]; then \
 		rm -Rf $(CARGOTMP) && \
 		rm -Rf $(LIBDIR)/build; \
