@@ -29,7 +29,7 @@ install.packages("valve", repos = c("https://josiahparry.r-universe.dev", "https
 
 When the R package is built it also includes the binary executable at `inst/valve`. So if you ever find yourself needing the executable `system.file("valve", package = "valve")` will point you right to it! This will always be the version of the executable that your R package is using.
 
-You can verify the binary works for your machine by running the below. If you have a Windows machine include use `valve.exe` for the executable. 
+You can verify the binary works for your machine by running the below. If you have a Windows machine include `system.file("valve.exe", package = "valve")` for the executable. 
 
 ```r
 # get executable path and included api paths
