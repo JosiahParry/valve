@@ -9,7 +9,11 @@ valve_write_vetiver(
   plumber_file = "plumber.R",
   path = ".",
   port = 8000,
-  vetiver_args = list()
+  vetiver_args = list(),
+  workers = NULL,
+  n_max = NULL,
+  check_unused = NULL,
+  max_age = NULL
 )
 }
 \arguments{
@@ -32,6 +36,10 @@ key-value pairs in a list object.}
 The content of the Dockerfile, invisibly.
 }
 \description{
-This function is a modification of \code{vetiver::vetiver_write_docker()} which utilizes
-valve to run model prediction endpoints in parallel.
+A Valve powered {vetiver} Dockerfile will run prediction endpoints concurrently.
+}
+\details{
+This function is a modification of \code{vetiver::vetiver_write_docker()}. It
+modifies the created Dockerfile to install Valve, changes the \code{ENTRYPOINT} to
+use the Valve executable instead of a single plumber API via an R command.
 }
