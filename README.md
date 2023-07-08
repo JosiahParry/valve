@@ -21,15 +21,31 @@ cargo install --git https://github.com/josiahparry/valve/ --no-default-features
 ```
 ### R package instructions
 
-There is an R package to simplify the use of Valve for those who are not familiar with Rust or CLI tools. Install the R package using `{remotes}`. Note that this will compile the package from source which will require Rust to be installed. If you don't have rust installed follow the instructions [here](https://www.rust-lang.org/tools/install). _Rust is the second easiest programming language to install after R_. 
+There is an R package to simplify the use of Valve for those who are not familiar with Rust or CLI tools. It is available as a binary for Windows, Linux, and MacOSX thanks to [R-universe](https://r-universe.dev/).
 
 ```r
-remotes::install_github("josiahparry/valve")
+install.packages("valve", repos = c("https://josiahparry.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
-<!--
 When the R package is built it also includes the binary executable at `inst/valve`. So if you ever find yourself needing the executable `system.file("valve", package = "valve")` will point you right to it! This will always be the version of the executable that your R package is using.
--->
+
+You can verify the binary works for your machine by running the below. If you have a Windows machine include use `valve.exe` for the executable. 
+
+```r
+# get executable path and included api paths
+valve_executable <- system.file("valve", package = "valve")
+plumber_api_path <- system.file("plumber.R", package = "valve")
+
+# check that they exist
+file.exists(c(valve_executable, plumber_api_path))
+
+# run Valve from the R-package's executable
+processx::run(
+  valve_executable,
+  args = c("-f", plumber_api_path),
+  echo = TRUE
+)
+```
 
 
 ## Creating a Valve app
