@@ -85,9 +85,13 @@ Docker container (or use <a href="https://posit.co/products/enterprise/connect/"
 if you have company budget and more use cases than a single API).</p>
 <p>At the end is an example <code>Dockerfile</code> that can act as a
 reference for you. If you have an existing Dockerfile that you use to
-deploy a plumber API, all you need to do to use Valve is to 1) install
-Rust, 2) install Valve, and 3) change your <code>ENTRYPOINT</code>.
-Below are the key additional and changes you would have to make.</p>
+deploy a plumber API, all you need to do to use Valve is to</p>
+<ol style="list-style-type: decimal">
+<li>install Rust,</li>
+<li>install Valve, and</li>
+<li>change your <code>ENTRYPOINT</code>.</li>
+</ol>
+<p>Below are the key additional and changes you would have to make.</p>
 <pre class="docker"><code># Install Rust toolchain &amp; add to the path
 RUN apt-get install -y -q build-essential curl
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -101,14 +105,14 @@ ENTRYPOINT valve -f /api/plumber.R -h 0.0.0.0 -p 8000 --workers 10 --n-max 10 --
 <p>The first 3 commands install the appropriate system requirement to
 install Rust, install Rust, then adds <code>cargo</code> to the path.
 Afterwards, the valve binary is installed from <code>crates.io</code>.
-Lastly, an <code>ENTRYPOINT</code> is defined to fun your plumber
+Lastly, an <code>ENTRYPOINT</code> is defined to run your plumber
 API.</p>
 <p>The <code>ENTRYPOINT</code> is where you have control over how Valve
 will scale. Most importantly, the <code>-f</code> flag should point to a
-<code>plumber.R</code> script—whereever that might be in your
-Dockerfile. The host <em>must</em> be <code>0.0.0.0</code> for a Docker
-container. You can configure the additional arguments as you need. See
-the README for more on how these arguments work.</p>
+<code>plumber.R</code> script—wherever that might be in your Dockerfile.
+The host <em>must</em> be <code>0.0.0.0</code> for a Docker container.
+You can configure the additional arguments as you need. See the README
+for more on how these arguments work.</p>
 <div class="section level2">
 <h2 id="example-dockerfile">Example <code>Dockerfile</code><a class="anchor" aria-label="anchor" href="#example-dockerfile"></a>
 </h2>
