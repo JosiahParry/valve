@@ -17,7 +17,7 @@ Plumber is an R package that creates RESTful APIs from R functions. It is limite
 To install the executable only run
 
 ```bash
-cargo install --git https://github.com/josiahparry/valve/ --no-default-features
+cargo install valve-rs --no-default-features
 ```
 ### R package instructions
 
