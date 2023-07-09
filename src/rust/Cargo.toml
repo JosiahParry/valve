@@ -1,17 +1,22 @@
 [package]
-name = "valve"
+name = "valve-rs"
 version = "0.1.0"
 edition = "2021"
 license = "BSD 3-Clause"
-repository = "https://github.com/JosiahParry/valve"
+#repository = "https://github.com/JosiahParry/valve"
 description = "Auto-scale R {plumber} APIs concurrently using Tokio, Axum, and Deadpool"
-homepage = "https://valve.josiahparry.com"
+#homepage = "https://valve.josiahparry.com"
 exclude = ["TODO", "WHATIVELEARNED"]
 readme = "../../README.md"
 
 [lib]
+name = "valve"
 path = "src/lib.rs"
 crate-type = ["staticlib", "lib"]
+
+[[bin]]
+name = "valve"
+path = "src/main.rs"
 
 
 [dependencies]
