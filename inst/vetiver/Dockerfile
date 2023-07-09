@@ -12,24 +12,10 @@ RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   zlib1g-dev \
   && apt-get clean
 
+ADD cars_linear
 COPY vetiver_renv.lock renv.lock
-
 RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
-
-
-RUN apt-get install -y -q \
-    build-essential \
-    curl
-
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install --git https://github.com/josiahparry/valve/ --no-default-features
-
-
-ADD cars_linear /opt/ml/cars_linear
 COPY plumber.R /opt/ml/plumber.R
-
-EXPOSE 3000
-ENTRYPOINT valve -h 0.0.0.0 -f /opt/ml/plumber.R
+EXPOSE 8000
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb('/opt/ml/plumber.R'); pr$run(host = '0.0.0.0', port = 8000)"]

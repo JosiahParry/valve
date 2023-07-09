@@ -5,8 +5,8 @@ type: rds
 title: 'cars_linear: a pinned list'
 description: An OLS linear regression model
 tags: ~
-created: 20230524T221439Z
-api_version: 1.0
+created: 20230709T200220Z
+api_version: 1
 user:
   required_pkgs: ~
   renv_lock: ~
