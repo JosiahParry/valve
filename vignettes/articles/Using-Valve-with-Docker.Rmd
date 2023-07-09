@@ -9,8 +9,36 @@ knitr::opts_chunk$set(
 )
 ```
 
-In
+Valve is intended to make plumber APIs more effective in a production setting. It is recommended to deploy plumber APIs to production in a Docker container (or use [Posit Connect](https://posit.co/products/enterprise/connect/) if you have company budget and more use cases than a single API).
 
-```{r setup}
-library(valve)
+At the end is an example `Dockerfile` that can act as a reference for you. If you have an existing Dockerfile that you use to deploy a plumber API, all you need to do to use Valve is to 1) install Rust, 2) install Valve, and 3) change your `ENTRYPOINT`. Below are the key additional and changes you would have to make.
+
+```docker
+# Install Rust toolchain & add to the path
+RUN apt-get install -y -q build-essential curl
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Valve binary from Github
+RUN cargo install valve-rs --no-default-features
+
+# Start Valve app
+ENTRYPOINT valve -f /api/plumber.R -h 0.0.0.0 -p 8000 --workers 10 --n-max 10 --check-unused 10 --max-age 300
+```
+
+The first 3 commands install the appropriate system requirement to install Rust, install Rust, then adds `cargo` to the path. Afterwards, the valve binary is installed from `crates.io`. Lastly, an `ENTRYPOINT` is defined to fun your plumber API. 
+
+The `ENTRYPOINT` is where you have control over how Valve will scale. Most importantly, the `-f` flag should point to a `plumber.R` script—whereever that might be in your Dockerfile. The host _must_ be `0.0.0.0` for a Docker container. You can configure the additional arguments as you need. See the README for more on how these arguments work. 
+
+## Example `Dockerfile`
+
+```{r, echo = FALSE}
+cat(readLines(system.file("docker/Dockerfile", package = "valve")), sep = "\n")
+```
+The above Dockerfile is included in `{valve}` and can be found via `system.file("docker/Dockerfile", package = "valve")`. It was build with the included plumber API `system.file("docker/plumber.R", package = "valve")`.
+
+To replciate, copy the files into a directory of your choosing. Ensure Docker desktop is open. Then build the container with `docker build -t valve:latest .`. Then you can run the container with: 
+
+```shell
+docker run -p 8000:8000 valve:latest
 ```

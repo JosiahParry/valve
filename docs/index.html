@@ -40,6 +40,12 @@
 <li class="nav-item">
   <a class="nav-link" href="reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="articles/Using-Valve-with-Docker.html">Using Valve with Docker</a>
+  </div>
+</li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="search.json" id="search-input" placeholder="Search for" autocomplete="off">
@@ -63,9 +69,10 @@
 <div class="page-header"><h1 id="valve">Valve<a class="anchor" aria-label="anchor" href="#valve"></a>
 </h1></div>
 <blockquote>
-<p><em>Redirects your plumbing for you. </em></p>
+<p><em>Redirects your plumbing for you.</em></p>
 </blockquote>
-<p><code>valve</code> creates multi-threaded <a href="https://www.rplumber.io/" class="external-link">Plumber APIs</a> powered by Rust’s <a href="https://github.com/tokio-rs/tokio" class="external-link">tokio</a> and <a href="https://github.com/tokio-rs/axum" class="external-link">axum</a> web frameworks.</p>
+<p><code>valve</code> creates multi-threaded <a href="https://www.rplumber.io/" class="external-link">Plumber APIs</a> powered by Rust’s <a href="https://github.com/tokio-rs/tokio" class="external-link">tokio</a> and <a href="https://github.com/tokio-rs/axum" class="external-link">axum</a> web frameworks. Plumber connections are automatically spawned, pooled, and terminated using <a href="https://docs.rs/deadpool/" class="external-link">deadpool</a>. App connections are automatically pooled by <a href="https://docs.rs/hyper/latest/hyper/client/index.html" class="external-link">hyper</a>.</p>
+<p>Valve is a Rust CLI with an accompanying R package. Running Valve from an R session will block the session. If you are comfortable, it is recommended to install the cli so you can run Valve from your terminal so that you can call the plumber APIs from your R session.</p>
 <div class="section level2">
 <h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
@@ -74,36 +81,134 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Install the R package using {remotes}. Note that this will compile the package from source which will require Rust to be installed. If you don’t have rust installed follow the instructions <a href="https://www.rust-lang.org/tools/install" class="external-link">here</a>. <em>Rust is the second easiest programming language to install after R</em>.</p>
-<blockquote>
-<p>I also recommend installing the development version of {rextendr} via <code>pak::pak("extendr/rextendr")</code> which provides the function <code><a href="https://extendr.github.io/rextendr/reference/rust_sitrep.html" class="external-link">rextendr::rust_sitrep()</a></code> which will update you on if you have a compatible Rust installation.</p>
-</blockquote>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"josiahparry/valve"</span><span class="op">)</span></span></code></pre></div>
-<p>When the R package is built it also includes the binary executable at <code>inst/valve</code>. So if you ever find yourself needing the executable <code>system.file("valve", package = "valve")</code> will point you right to it! This will always be the version of the executable that your R package is using.</p>
+<div class="section level3">
+<h3 id="cli-instructions">Cli Instructions<a class="anchor" aria-label="anchor" href="#cli-instructions"></a>
+</h3>
 <p>To install the executable only run</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">cargo</span> install <span class="at">--git</span> https://github.com/josiahparry/valve/ <span class="at">--no-default-features</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">cargo</span> install valve-rs <span class="at">--no-default-features</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="r-package-instructions">R package instructions<a class="anchor" aria-label="anchor" href="#r-package-instructions"></a>
+</h3>
+<p>There is an R package to simplify the use of Valve for those who are not familiar with Rust or CLI tools. It is available as a binary for Windows, Linux, and MacOSX thanks to <a href="https://r-universe.dev/" class="external-link">R-universe</a>.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"valve"</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://josiahparry.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>When the R package is built it also includes the binary executable at <code>inst/valve</code>. So if you ever find yourself needing the executable <code>system.file("valve", package = "valve")</code> will point you right to it! This will always be the version of the executable that your R package is using.</p>
+<p>You can verify the binary works for your machine by running the below. If you have a Windows machine include <code>system.file("valve.exe", package = "valve")</code> for the executable.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get executable path and included api paths</span></span>
+<span><span class="va">valve_executable</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"valve"</span>, package <span class="op">=</span> <span class="st">"valve"</span><span class="op">)</span></span>
+<span><span class="va">plumber_api_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"plumber.R"</span>, package <span class="op">=</span> <span class="st">"valve"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># check that they exist</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">valve_executable</span>, <span class="va">plumber_api_path</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># run Valve from the R-package's executable</span></span>
+<span><span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span></span>
+<span>  <span class="va">valve_executable</span>,</span>
+<span>  args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-f"</span>, <span class="va">plumber_api_path</span><span class="op">)</span>,</span>
+<span>  echo <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="creating-the-app">Creating the app<a class="anchor" aria-label="anchor" href="#creating-the-app"></a>
+<h2 id="creating-a-valve-app">Creating a Valve app<a class="anchor" aria-label="anchor" href="#creating-a-valve-app"></a>
 </h2>
-<p>The R package exports only 1 function: <code><a href="reference/valve_run.html">valve_run()</a></code>. The most important argument is <code>filepath</code> which determines which Plumber API will be executed as well as specifying the <code>host</code> and <code>port</code> to determine <em>where</em> your app will run. Additional configuration can be done with the <code>n_max</code>, <code>workers</code>, <code>check_unused</code>, and <code>max_age</code> argument to specify <em>how</em> your app will scale.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>To run a plumber API concurrently using the R package, use <code><a href="reference/valve_run.html">valve_run()</a></code>. The most important argument is <code>filepath</code> which determines which Plumber API will be executed as well as specifying the <code>host</code> and <code>port</code> to determine <em>where</em> your app will run. Additional configuration can be done with the <code>n_max</code>, <code>workers</code>, <code>check_unused</code>, and <code>max_age</code> argument to specify <em>how</em> your app will scale. By default, the app will be run on host <code>127.0.0.1</code> and on port <code>3000</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/JosiahParry/valve" class="external-link">valve</a></span><span class="op">)</span></span>
 <span><span class="co"># get included plumber API path</span></span>
 <span><span class="va">plumber_api_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"plumber.R"</span>, package <span class="op">=</span> <span class="st">"valve"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/valve_run.html">valve_run</a></span><span class="op">(</span><span class="va">plumber_api_path</span>, n_max <span class="op">=</span> <span class="fl">5</span>, workers <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/valve_run.html">valve_run</a></span><span class="op">(</span><span class="va">plumber_api_path</span>, n_max <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Docs hosted at &lt;http://127.0.0.1:3000/__docs__/&gt;</span></span></code></pre></div>
-<p><code>n_max</code> refers to the maximum number of background Plumber APIs will be spawned whereas <code>workers</code> specifies how many main worker threads are available to handle incoming requests. Generally, the number of <code>workers</code> should be equal to the number of plumber APIs since because plumber is single threaded. Plumber connections are automatically spawned, pooled, and terminated using <a href="https://docs.rs/deadpool/" class="external-link">deadpool</a>. App connections are automatically pooled by <a href="https://docs.rs/hyper/latest/hyper/client/index.html" class="external-link">hyper</a>.</p>
-<p>Running this from your R session will block the session. If you are comfortable, it is recommended to install the cli so you can run them from your terminal so that you can call the plumber APIs from your R session.</p>
+<p>Using the cli:</p>
+<pre class="shell"><code>valve -f plumber.R -n 5 </code></pre>
+<div class="section level3">
+<h3 id="understanding-the-parameters">Understanding the parameters:<a class="anchor" aria-label="anchor" href="#understanding-the-parameters"></a>
+</h3>
+<p>The arguments that you provide determines how Valve will scale up and down the application is requests come in.</p>
+<ul>
+<li>
+<code>host</code> (<code>--host</code>):
+<ul>
+<li>defaults to <code>127.0.0.1</code>. Defines which host the Axum app and the plumber API will be hosted on.</li>
+</ul>
+</li>
+<li>
+<code>port</code> (<code>--port</code>):
+<ul>
+<li>defaults to <code>3000</code>. Defines which port the main Axum app will be listening on.</li>
+</ul>
+</li>
+<li>
+<code>file</code> (<code>--file</code>):
+<ul>
+<li>defaults to <code>plumber.R</code>. The path to the R script that defines the plumber API.</li>
+</ul>
+</li>
+<li>
+<code>workers</code> (<code>--workers</code>):
+<ul>
+<li>default <code>3</code>. Determines how many workers are set in the <a href="https://docs.rs/tokio/latest/tokio/runtime/struct.Builder.html#method.worker_threads" class="external-link">Tokio <code>Runtime</code></a>. These workers handle incoming requests and return responses.</li>
+</ul>
+</li>
+<li>
+<code>n_max</code> (<code>--n-max</code>):
+<ul>
+<li>default <code>3</code>. Refers to the maximum number of background Plumber APIs that can be spawned whereas <code>workers</code> specifies how many main worker threads are available to handle incoming requests. Generally, the number of <code>workers</code> should be equal to the number of plumber APIs since because plumber is single threaded. This is the default. If <code>workers</code> is less than <code>n_max</code>, you’ll never spawn the maximum number of APIs.</li>
+</ul>
+</li>
+<li>
+<code>check_unused</code> (<code>--check-unused</code>):
+<ul>
+<li>default <code>10</code>. The time interval, in seconds, to check for unused connections.</li>
+</ul>
+</li>
+<li>
+<code>max_age</code> (<code>--max-age</code>):
+<ul>
+<li>default <code>300</code> (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused),</li>
+</ul>
+</li>
+</ul>
+<!--
+## How it all works
+
+By default, valve creates an app hosted at  `127.0.0.1:3000`. 
+It looks for a file called `plumber.R` in the working directory. 
+
+The app that is spun up has 3 Axum workers (`workers`) which handle the incoming requests. 
+The app also will create a pool of `n-max` plumber APIs which too is set to 3. 
+The number of workers and the maximum number of plumber APIs should, generally,
+be the same. If there are more workers than API connections, then there will be 
+a worker waiting for a plumber API connection to free up before it can be used. 
+-->
+</div>
 </div>
 <div class="section level2">
-<h2 id="calling-valve-with-multiple-workers">Calling valve with multiple workers<a class="anchor" aria-label="anchor" href="#calling-valve-with-multiple-workers"></a>
+<h2 id="example-calling-valve-with-multiple-workers">Example: Calling valve with multiple workers<a class="anchor" aria-label="anchor" href="#example-calling-valve-with-multiple-workers"></a>
 </h2>
 <p>The way valve works is by accepting requests on a main port (3000 by default) and then distributing the requests round robin to the plumber APIs that are spawned on random ports. Requests are captured by <code>axum</code> and proxied to a plumber API process.</p>
-<p>First I’m going to define a function to call my <code>/sleep</code> endpoint. The function will take two parameters: the port and the duration of sleep. The port will be used to change between the valve app and a single plumber API.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>You can run the example plumber API included with Valve in the background in R using this code chunk:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># create temp file</span></span>
+<span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".R"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># create script lines</span></span>
+<span><span class="va">valve_script</span> <span class="op">&lt;-</span> <span class="st">'</span></span>
+<span><span class="st">plumber_api_path &lt;- system.file("plumber.R", package = "valve")</span></span>
+<span><span class="st">valve::valve_run(plumber_api_path, workers = 5)</span></span>
+<span><span class="st">'</span></span>
+<span><span class="co"># write to temp</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="va">valve_script</span>, <span class="va">tmp</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># run in the background</span></span>
+<span><span class="fu">rstudioapi</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/rstudioapi/reference/jobRunScript.html" class="external-link">jobRunScript</a></span><span class="op">(</span><span class="va">tmp</span><span class="op">)</span></span></code></pre></div>
+<p>Or launch it directly from the terminal via:</p>
+<pre class="shell"><code>valve -f $(Rscript -e 'cat(system.file("plumber.R", package = "valve"))')</code></pre>
+<p>Once the Valve app is running in the background we can begin the example. First I’m going to define a function to call the <code>/sleep</code> endpoint. The function will take two parameters: the port and the duration of sleep. The port will be used to change between the valve app and a single plumber API.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sleep</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">port</span>, <span class="va">secs</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">httr2</span><span class="fu">::</span><span class="fu"><a href="https://httr2.r-lib.org/reference/request.html" class="external-link">request</a></span><span class="op">(</span></span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"127.0.0.1:"</span>, <span class="va">port</span>, <span class="st">"/sleep?zzz="</span>, <span class="va">secs</span><span class="op">)</span></span>
@@ -112,26 +217,52 @@
 <span>    <span class="fu">httr2</span><span class="fu">::</span><span class="fu"><a href="https://httr2.r-lib.org/reference/resp_body_raw.html" class="external-link">resp_body_string</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Using this function we’ll create 5 total R sessions each will make a request to sleep for 2 seconds.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/DavisVaughan/furrr" class="external-link">furrr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multisession</span>, workers <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<p>First, we’ll ping the main valve app which will distribute requests round robin.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>First, we’ll ping the main valve app which will distribute requests. The first time this is ran might be slow since there will not be any plumber APIs in the pool yet.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">start</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">multi_sleep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://furrr.futureverse.org/reference/future_map.html" class="external-link">future_map</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">~</span> <span class="fu">sleep</span><span class="op">(</span><span class="fl">3000</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">multi_total</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="va">start</span></span></code></pre></div>
 <p>Next, we select only one of the available plumber APIs and query it.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">start</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">single_sleep</span> <span class="op">&lt;-</span> <span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map.html" class="external-link">future_map</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">~</span> <span class="fu">sleep</span><span class="op">(</span><span class="fl">35219</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">single_sleep</span> <span class="op">&lt;-</span> <span class="fu">furrr</span><span class="fu">::</span><span class="fu"><a href="https://furrr.futureverse.org/reference/future_map.html" class="external-link">future_map</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">~</span> <span class="fu">sleep</span><span class="op">(</span><span class="fl">53869</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">single_total</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="va">start</span></span></code></pre></div>
 <p>Notice the performance difference.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Multiple Plumber APIs: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">multi_total</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Multiple Plumber APIs: 2.63"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"One Plumber API: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">single_total</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "One Plumber API: 10.08"</span></span></code></pre></div>
 <p>In the former each worker gets to make the request in approximately the same amount of time. The latter has to wait for each subsequent step to finish before the next one can occur. So we’ve effectively distributed the work load.</p>
+</div>
+<div class="section level2">
+<h2 id="how-valve-works">How Valve Works<a class="anchor" aria-label="anchor" href="#how-valve-works"></a>
+</h2>
+<p>The architecture, at a high level, is captured by this diagram.</p>
+<p><img src="reference/figures/valve-diagram.png"></p>
+<p>There are really three key components to this:</p>
+<ul>
+<li>the Tokio <code>Runtime</code>,</li>
+<li>the Axum <code>Router</code>,</li>
+<li>and the connection <code>Pool</code>.</li>
+</ul>
+<div class="section level3">
+<h3 id="request-handling">Request handling<a class="anchor" aria-label="anchor" href="#request-handling"></a>
+</h3>
+<p>The tokio <a href="https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html" class="external-link"><code>Runtime</code></a> is what allows Valve to be asynchronous. It handles I/O, tasks, and all that jazz. It is also what backs <code>Axum</code>. In Valve, we <a href="https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/lib.rs#L23" class="external-link">define an asynchronous runtime</a> with a pre-defined number of <code>workers</code>. These workers are what handle the incoming requests.</p>
+<p>When a request is picked up, it is then sent to the Axum <a href="https://docs.rs/axum/latest/axum/struct.Router.html" class="external-link"><code>Router</code></a>. The router takes the incoming requests and sends them to the appropriate endpoint.</p>
+<p>The routes that are defined are <code>/</code> and <code>/*key</code>. <code>/</code> is a permanent redirect to the plumber API documentation. Whereas <code>/*key</code> captures every other request. These requests have a special handler that, in short, act as a reverse proxy between Axum and a plumber API. The handler captures the request and grabs a Plumber connection from the <a href="https://docs.rs/deadpool/latest/deadpool/managed/struct.Pool.html" class="external-link"><code>Pool</code></a>. The <a href="https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/plumber.rs#L24" class="external-link">Plumber struct</a> contains the host and port that the APIs live on. The request is then parsed, and redirected to the plumber API. The <a href="https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/plumber.rs#L74" class="external-link">response is captured and returned as a response</a> to the Axum router.</p>
+</div>
+<div class="section level3">
+<h3 id="connection-pooling">Connection pooling<a class="anchor" aria-label="anchor" href="#connection-pooling"></a>
+</h3>
+<p>Valve implements a custom <a href="https://docs.rs/deadpool/latest/deadpool/managed/index.html" class="external-link">managed</a> Pool for plumber APIs. The pool consists of <code>Plumber</code> struct which contain the host, port, and the <a href="https://doc.rust-lang.org/std/process/struct.Child.html" class="external-link">child process</a>.</p>
+<p>When Deadpool spawns a new connection for the pool, it thus spawns a new plumber API. This is done using <a href="https://doc.rust-lang.org/std/process/struct.Command.html" class="external-link"><code>Command::new()</code></a> to create a detached child process. A random port is generated, checked, and then assigned to the plumber API. Then the process is started by calling <code>R -e "plumber::plumb('{filepath}')$run(host = '{host}', port = {port})"</code> via <code>Command</code>. This means that <em>R must be on the path</em> and that if there are multiple installs of R, whichever one is on the path will be used.</p>
+<p>To prevent plumber APIs being spawned too frequently they are kept alive for duration defined by <code>max_age</code>. A connection can be unused for that duration. If it exceeds that age without being used, Deadpool will prune the connection and terminate the process. This check happens on a <a href="https://github.com/JosiahParry/valve/blob/aeebc19e868d39014419129fa07da42cc9113ee7/src/rust/src/start.rs#L56C4-L56C4" class="external-link">separate thread</a> occurring every <code>check_unused</code> seconds.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="benchmarks-with-drill">Benchmarks with drill<a class="anchor" aria-label="anchor" href="#benchmarks-with-drill"></a>
@@ -165,7 +296,7 @@ Sample standard deviation 2ms
 <div class="section level3">
 <h3 id="with-all-that-said">With all that said….<a class="anchor" aria-label="anchor" href="#with-all-that-said"></a>
 </h3>
-<p>valve is best suited for light-ish work loads. Each background plumber API will hold their own copy of their R objects. So if you are serving a machine learning model that is a GB big, that model will have to be copied into each thread and that can be quickly bloat up your ram. So be smart! If you have massive objects in your R session, try and reduce the clutter and thin it out.</p>
+<p>valve is best suited for light to medium sized work loads. Each background plumber API will hold their own copy of their R objects. So if you are serving a machine learning model that is a GB big, that model will have to be copied into each thread and that can be quickly bloat up your ram. So be smart! If you have massive objects in your R session, try and reduce the clutter and thin it out.</p>
 </div>
 </div>
 </div>
