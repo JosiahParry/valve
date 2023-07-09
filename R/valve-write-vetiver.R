@@ -83,7 +83,7 @@ valve_write_vetiver <- function(vetiver_model,
   # command for installing valve
   install_valve <- c(
     "\n# Install Valve binary from Github",
-    "RUN cargo install --git https://github.com/josiahparry/valve/ --no-default-features"
+    "RUN cargo install valve-rs --no-default-features"
   )
 
 
