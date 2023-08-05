@@ -59,7 +59,7 @@ pub async fn valve_start(
             pool.retain(|pr, metrics| {
                 let too_old = metrics.last_used() < max_age;
 
-                if !too_old {
+                if pool.status().size > 1 && !too_old {
                     println!("Killing plumber API at {}:{}", pr.host, pr.port);
                 }
 
