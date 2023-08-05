@@ -14,11 +14,13 @@ pub fn valve_run_(
     host: String,
     port: u16,
     workers: u16,
+    n_min: u16,
     n_max: u16,
     check_interval: i32,
     max_age: i32,
 ) {
     let workers = workers as usize;
+    let n_min = n_min as usize;
     let n_max = n_max as usize;
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
@@ -27,7 +29,7 @@ pub fn valve_run_(
         .unwrap()
         .block_on(async {
             tokio::select! {
-                _ = valve_start(filepath, host, port, n_max, check_interval, max_age) => {
+                _ = valve_start(filepath, host, port, n_min, n_max, check_interval, max_age) => {
                 }
                 r = tokio::signal::ctrl_c() => {
                     match r {

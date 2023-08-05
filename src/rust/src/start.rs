@@ -17,6 +17,7 @@ pub async fn valve_start(
     filepath: String,
     host: String,
     port: u16,
+    n_min: usize,
     n_max: usize,
     check_interval: i32,
     max_age: i32,
@@ -58,7 +59,7 @@ pub async fn valve_start(
             tokio::time::sleep(interval).await;
 
             // if pool has more than 1 active connection do prune check
-            if pool.status().size > 1 {
+            if pool.status().size > n_min {
                 pool.retain(|pr, metrics| {
                     let too_old = metrics.last_used() < max_age;
                     if !too_old {

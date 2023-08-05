@@ -32,6 +32,12 @@ struct Cli {
     /// default 5 mins. How long an API can go unused before being killed in seconds.
     #[argh(option, default = "300")]
     max_age: u32,
+
+
+    /// the maximum number of plumber APIs to spawn
+    #[argh(option, default = "1")]
+    n_min: u16,
+
 }
 
 //#[tokio::main(worker_threads = 5)]
@@ -44,8 +50,16 @@ fn main() {
         panic!("plumber file does not exist.")
     }
 
+    if cli_args.n_min < 1 {
+        panic!("Cannot have fewer than 1 plumber API")
+    }
+
     if cli_args.n_max < 1 {
         panic!("Cannot have fewer than 1 plumber API")
+    }
+
+    if cli_args.n_min > cli_args.n_max {
+        panic!("`n_min` cannot be greater than `n_max`")
     }
 
     if cli_args.workers < 1 {
@@ -86,6 +100,7 @@ fn main() {
                 cli_args.file,
                 cli_args.host,
                 cli_args.port,
+                cli_args.n_min.into(),
                 cli_args.n_max.into(),
                 cli_args.check_unused.try_into().unwrap(),
                 cli_args.max_age.try_into().unwrap(),
