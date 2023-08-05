@@ -56,15 +56,17 @@ pub async fn valve_start(
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(interval).await;
-            pool.retain(|pr, metrics| {
-                let too_old = metrics.last_used() < max_age;
 
-                if pool.status().size > 1 && !too_old {
-                    println!("Killing plumber API at {}:{}", pr.host, pr.port);
-                }
-
-                too_old
-            });
+            // if pool has more than 1 active connection do prune check
+            if pool.status().size > 1 {
+                pool.retain(|pr, metrics| {
+                    let too_old = metrics.last_used() < max_age;
+                    if !too_old {
+                        println!("Killing plumber API at {}:{}", pr.host, pr.port);
+                    }
+                    too_old
+                });
+            }
         }
     });
 
