@@ -9,6 +9,7 @@ use extendr_api::prelude::*;
 
 #[cfg(feature = "rlib")]
 #[extendr]
+#[allow(clippy::too_many_arguments)]
 pub fn valve_run_(
     filepath: String,
     host: String,

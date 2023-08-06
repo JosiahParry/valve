@@ -36,8 +36,7 @@ impl Plumber {
         println!("about to spawn plumber");
 
         let process = spawn_plumber(host, port, filepath);
-        
-//        #[cfg(debug_assertions)]
+
         println!("Spawning plumber API at {host}:{port}");
 
         Self {
@@ -146,7 +145,6 @@ pub fn spawn_plumber(host: &str, port: u16, filepath: &str) -> Child {
 
     pr_child
 }
-    
 
 type Pool = managed::Pool<PrManager>;
 pub async fn plumber_handler(
@@ -154,7 +152,6 @@ pub async fn plumber_handler(
     Extension(pr_pool): Extension<Pool>,
     req: Request<Body>,
 ) -> Response {
-
     #[cfg(debug_assertions)]
     println!("accessing handler");
 

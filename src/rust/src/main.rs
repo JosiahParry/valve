@@ -33,11 +33,9 @@ struct Cli {
     #[argh(option, default = "300")]
     max_age: u32,
 
-
     /// the maximum number of plumber APIs to spawn
     #[argh(option, default = "1")]
     n_min: u16,
-
 }
 
 //#[tokio::main(worker_threads = 5)]
