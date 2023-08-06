@@ -84,11 +84,9 @@ The arguments that you provide determines how Valve will scale up and down the a
 - `check_unused` (`--check-unused`): 
   - default `10`. The time interval, in seconds, to check for unused connections.
 - `max_age` (`--max-age`):
-  - default `300` (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused),
-
-
-
-
+  - default `300` (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused).
+- `n_min`: 
+  - default `1`. The minimum number of connections to keep active at all times. Connections will not be pruned if there are this many connections open.
 
 
 
