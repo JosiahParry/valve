@@ -1,6 +1,6 @@
 Package: valve
 Title: Redirects Your Plumbing For You
-Version: 0.0.1.9000
+Version: 0.1.1.9000
 Authors@R: 
     person("Josiah", "Parry", , "josiah.parry@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9910-865X"))
