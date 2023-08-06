@@ -1,8 +1,8 @@
 # Test prediction endpoints
 ---
-concurrency: 5
+concurrency: 10
 base: 'http://localhost:3000'
-iterations: 100
+iterations: 500
 rampup: 2
 
 plan:

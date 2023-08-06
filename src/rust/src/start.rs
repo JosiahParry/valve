@@ -37,7 +37,7 @@ pub async fn valve_start(
     // create Pool manager
     let plumber_manager = PrManager {
         host: axum_host.to_string(),
-        pr_file: filepath.to_string(),
+        pr_file: filepath.to_string()
     };
 
     // Build the Plumber API connection Pool
@@ -45,6 +45,13 @@ pub async fn valve_start(
         .max_size(n_max)
         .build()
         .unwrap();
+
+    
+    let pool = Arc::new(pool); 
+
+    // spawn the first connection before we create the app? 
+    let _ = pool.get().await.unwrap();
+
 
     // define the APP
     let app = axum::Router::new()
@@ -58,8 +65,10 @@ pub async fn valve_start(
         loop {
             tokio::time::sleep(interval).await;
 
-            // if pool has more than 1 active connection do prune check
-            if pool.status().size > n_min {
+            let n = pool.status().size;
+
+            // if pool is greater than the minimum size, do a prune check
+            if n > n_min {
                 pool.retain(|pr, metrics| {
                     let too_old = metrics.last_used() < max_age;
                     if !too_old {
@@ -67,7 +76,7 @@ pub async fn valve_start(
                     }
                     too_old
                 });
-            }
+            } 
         }
     });
 

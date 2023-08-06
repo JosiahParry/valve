@@ -148,7 +148,7 @@ Using this function we'll create 5 total R sessions each will make a request to 
 
 ``` r
 library(furrr)
-plan(multisession, workers = 5)
+plan(multisession, workers = 21)
 ```
 
 First, we'll ping the main valve app which will distribute requests. The first time

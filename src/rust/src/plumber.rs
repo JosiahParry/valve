@@ -68,6 +68,7 @@ impl Plumber {
         #[cfg(debug_assertions)]
         println!("about to proxy");
         // TODO enable https or other schemes
+        // can the scheme figured out from the pr_host?
         uri.scheme = Some("http".parse().unwrap());
         *req.uri_mut() = Uri::from_parts(uri).unwrap();
         client.request(req).await.unwrap().into_response()
