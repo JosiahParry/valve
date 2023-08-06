@@ -1,7 +1,5 @@
 TODO
 
 - create end point that lists all plumber ports / paths
-- modify Makevars to include a binary that gets installed into `/inst`
-  - ENABLES: R function for creating vetiver docker containers
 - options for verbosity of R processes
 

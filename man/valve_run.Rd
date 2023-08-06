@@ -8,6 +8,7 @@ valve_run(
   filepath = "plumber.R",
   host = "127.0.0.1",
   port = 3000,
+  n_min = 1,
   n_max = 3,
   workers = n_max,
   check_unused = 10,
@@ -21,6 +22,9 @@ the \code{file} argument of \code{plumber::plumb()}.}
 \item{host}{default \code{"127.0.0.1"}. Where to host the valve app and Plumber APIs.}
 
 \item{port}{default \code{3000}. The port to host the valve app on.}
+
+\item{n_min}{default \code{1}. The minimum number of Plumber APIs made available.
+Must be smaller than \code{n_max}.}
 
 \item{n_max}{default \code{3}. The maximum number of Plumber APIs to run in parallel.}
 

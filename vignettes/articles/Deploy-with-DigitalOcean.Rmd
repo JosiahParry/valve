@@ -1,0 +1,50 @@
+---
+title: "Deploy with DigitalOcean"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+1. Create an account on DigitalOcean
+1. Open the Docker desktop app
+2. Create a Docker image
+3. build & tag docker image
+4. push image to dockerhub
+5. navigate to console
+6. apps > new 
+7. dockerhub & fill in values
+
+
+## Building Docker Image
+
+Start by building and tagging a Docker image. 
+
+Follow the below format 
+
+```shell
+docker build -t ${USERNAME}/${IMAGE}:${VERSION} .
+docker tag ${USERNAME}/${IMAGE}:${VERSION} ${USERNAME}/${IMAGE}:latest
+```
+
+In my case I ran: 
+
+```shell
+docker build -t josiahparry/valve:stable .
+docker tag josiahparry/valve:stable valve:latest
+```
+
+Open Docker Desktop.
+Sign into Docker desktop by pressing `Sign In` in the top right.
+You can now push to DockerHub from the app. Find the image you build in the images section. Click the three dots for more menu options. 
+
+
+Note that if youre using a Mac ARM machine (M1, M2, etc) you'll need to build with amd64
+
+```shell    
+docker buildx build --platform=linux/amd64 -t josiahparry/valve:latest .
+```
+
