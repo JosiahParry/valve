@@ -45,10 +45,7 @@ pub async fn valve_start(
         .max_size(n_max)
         .build()
         .unwrap();
-
     
-    let pool = Arc::new(pool); 
-
     // spawn the first connection before we create the app? 
     let _ = pool.get().await.unwrap();
 

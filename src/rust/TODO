@@ -2,4 +2,4 @@ TODO
 
 - create end point that lists all plumber ports / paths
 - options for verbosity of R processes
-
+- add tests for pre-release
