@@ -28,7 +28,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">valve</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,8 +43,12 @@
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/Deploy-with-DigitalOcean.html">Deploy with DigitalOcean</a>
     <a class="dropdown-item" href="../articles/Using-Valve-with-Docker.html">Using Valve with Docker</a>
   </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="../news/index.html">Changelog</a>
 </li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
@@ -80,8 +84,7 @@
     
     
 <p>Valve is intended to make plumber APIs more effective in a production
-setting. It is recommended to deploy plumber APIs to production in a
-Docker container (or use <a href="https://posit.co/products/enterprise/connect/" class="external-link">Posit Connect</a>
+setting. It is recommended to deploy plumber APIs to production in a <a href="https://www.docker.com/" class="external-link">Docker</a> container (or use <a href="https://posit.co/products/enterprise/connect/" class="external-link">Posit Connect</a>
 if you have company budget and more use cases than a single API).</p>
 <p>At the end is an example <code>Dockerfile</code> that can act as a
 reference for you. If you have an existing Dockerfile that you use to
@@ -153,9 +156,9 @@ for more on how these arguments work.</p>
 <p>The above Dockerfile is included in <a href="https://github.com/JosiahParry/valve" class="external-link">valve</a> and can be
 found via
 <code>system.file("docker/Dockerfile", package = "valve")</code>. It was
-build with the included plumber API
+built with the included plumber API
 <code>system.file("docker/plumber.R", package = "valve")</code>.</p>
-<p>To replciate, copy the files into a directory of your choosing.
+<p>To replicate, copy the files into a directory of your choosing.
 Ensure Docker desktop is open. Then build the container with
 <code>docker build -t valve:latest .</code>. Then you can run the
 container with:</p>

@@ -28,7 +28,7 @@
     
     <a class="navbar-brand me-2" href="index.html">valve</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,8 +43,12 @@
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="articles/Deploy-with-DigitalOcean.html">Deploy with DigitalOcean</a>
     <a class="dropdown-item" href="articles/Using-Valve-with-Docker.html">Using Valve with Docker</a>
   </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="news/index.html">Changelog</a>
 </li>
       </ul>
 <form class="form-inline my-2 my-lg-0" role="search">
@@ -168,7 +172,13 @@
 <li>
 <code>max_age</code> (<code>--max-age</code>):
 <ul>
-<li>default <code>300</code> (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused),</li>
+<li>default <code>300</code> (five minutes). Specifies how long a connection can go unused without being terminated. If a connection reaches this age it will be terminated in the next pool check (interval determined by check_unused).</li>
+</ul>
+</li>
+<li>
+<code>n_min</code>:
+<ul>
+<li>default <code>1</code>. The minimum number of connections to keep active at all times. Connections will not be pruned if there are this many connections open.</li>
 </ul>
 </li>
 </ul>
