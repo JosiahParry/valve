@@ -86,44 +86,172 @@
 <p>Valve is intended to make plumber APIs more effective in a production
 setting. It is recommended to deploy plumber APIs to production in a <a href="https://www.docker.com/" class="external-link">Docker</a> container (or use <a href="https://posit.co/products/enterprise/connect/" class="external-link">Posit Connect</a>
 if you have company budget and more use cases than a single API).</p>
-<p>At the end is an example <code>Dockerfile</code> that can act as a
-reference for you. If you have an existing Dockerfile that you use to
-deploy a plumber API, all you need to do to use Valve is to</p>
+<p>This document will describe two different approaches to making
+Dockerfiles for using valve. One using <code>rocker/r-ver</code> as the
+base image and the other that uses <code>rhub/r-minimal</code>.</p>
+<p>Both approaches have their benefits. Using <code>rocker/r-ver</code>,
+it is easier to identify and add system dependencies. Whereas using
+<code>rhub/r-minimal</code> the image is 1/10th of the size but some
+quality of life things such determining system dependencies and having R
+package binaries pre-built are not present.</p>
+<p>In order to keep the Docker images lightweight and as dependency free
+as possible, a <strong>multi-stage build</strong> process is used. This
+allows us to extract only <em>some</em> artifacts from one image and use
+another as the base image.</p>
+<p>Broadly, the process is like so:</p>
 <ol style="list-style-type: decimal">
-<li>install Rust,</li>
-<li>install Valve, and</li>
-<li>change your <code>ENTRYPOINT</code>.</li>
+<li>Install <code>valve</code> using a “builder”</li>
+<li>Specify our base image</li>
+<li>Copy the valve binary into our image</li>
+<li>Install plumber’s system dependencies</li>
+<li>Install R packages</li>
+<li>Start valve in your <code>ENTRYPOINT</code>
+</li>
 </ol>
-<p>Below are the key additional and changes you would have to make.</p>
-<pre class="docker"><code># Install Rust toolchain &amp; add to the path
-RUN apt-get install -y -q build-essential curl
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+<div class="section level2">
+<h2 id="using-rockerr-ver">Using <code>rocker/r-ver</code><a class="anchor" aria-label="anchor" href="#using-rockerr-ver"></a>
+</h2>
+<p>The <code>rocker/r-ver</code> images allow you to specify a specific
+version of R in the tag. This should match with the version of R that
+you are using. Determine yours with:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] '4.3.0'</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="rust-builder">Rust Builder<a class="anchor" aria-label="anchor" href="#rust-builder"></a>
+</h3>
+<p>The first part of our Dockerfile needs to specify our builder. This
+will be the slim Rust default image. Inside of that image we will
+install valve from crates.io.</p>
+<pre class="docker"><code># stage 1: install valve
+FROM rust:slim AS builder
+RUN cargo install valve-rs --no-default-features</code></pre>
+</div>
+<div class="section level3">
+<h3 id="everything-else">Everything else<a class="anchor" aria-label="anchor" href="#everything-else"></a>
+</h3>
+<p>Once that has been completed, we can move onto the creation of our
+Docker image that will serve plumber APIs via Valve. Here we specify the
+<code>rocker/r-ver</code> image we want based on the tag (the bit that
+follows the colon). This should match your R-version for the best chance
+at reproducibility.</p>
+<p>Next, some environment variables for Valve to use are specified. The
+<code>VALVE_HOST</code> <em>must be</em> <code>0.0.0.0</code> which is a
+Docker requirement. The <code>VALVE_PORT</code> can be changed. Then,
+the image is configured to always use RStudio Package Manager when using
+the <a href="https://rstudio.github.io/renv/" class="external-link"><code>{renv}</code></a>
+package which will provide us with binaries for speedy package
+install.</p>
+<pre class="docker"><code># stage 2: configure the container to run plumber
+FROM rocker/r-ver:4.3.0
 
-# Install Valve binary from Github
-RUN cargo install valve-rs --no-default-features
+ENV VALVE_HOST 0.0.0.0
+ENV VALVE_PORT 8000
 
-# Start Valve app
-ENTRYPOINT valve -f /api/plumber.R -h 0.0.0.0 -p 8000 --workers 10 --n-max 10 --check-unused 10 --max-age 300</code></pre>
-<p>The first 3 commands install the appropriate system requirement to
-install Rust, install Rust, then adds <code>cargo</code> to the path.
-Afterwards, the valve binary is installed from <code>crates.io</code>.
-Lastly, an <code>ENTRYPOINT</code> is defined to run your plumber
-API.</p>
+ENV RENV_CONFIG_REPOS_OVERRIDE https://packagemanager.rstudio.com/cran/latest</code></pre>
+<p>The next part of the <code>Dockerfile</code> contains steps to
+install the required system dependencies to install and run plumber
+APIs.</p>
+<pre class="docker"><code>RUN apt-get update -qq &amp;&amp; apt-get install -y --no-install-recommends \
+  libcurl4-openssl-dev \
+  libicu-dev \
+  libsodium-dev \
+  libssl-dev \
+  make \
+  zlib1g-dev \
+  &amp;&amp; apt-get clean</code></pre>
+<p>With the appropriate system dependencies, the R packages can be
+installed. First <a href="https://rstudio.github.io/renv/" class="external-link">renv</a> is installed and then
+<code>renv</code> is used to install package dependencies. This requires
+an <code>renv.lock</code> file to be found in the directory. Then the
+<code>plumber.R</code> file (also assumed to be in the root) is copied
+to <code>/api/plumber.R</code>.</p>
+<p>Note that if you have additional files that accompany your plumber
+API they also need to be copied and moved.</p>
+<pre class="docker"><code>COPY renv.lock renv.lock
+RUN Rscript -e "install.packages('renv')"
+RUN Rscript -e "renv::restore()"
+COPY plumber.R /api/plumber.R</code></pre>
+<p>Lastly, we copy the valve binary into our Docker image, expose the
+port that the API will be served on, and start the application!</p>
 <p>The <code>ENTRYPOINT</code> is where you have control over how Valve
 will scale. Most importantly, the <code>-f</code> flag should point to a
 <code>plumber.R</code> script—wherever that might be in your Dockerfile.
 The host <em>must</em> be <code>0.0.0.0</code> for a Docker container.
 You can configure the additional arguments as you need. See the README
 for more on how these arguments work.</p>
+<pre class="docker"><code># get binary from builder 
+COPY --from=builder /usr/local/cargo/bin/valve /usr/local/bin/
+
+# open the port for valve
+EXPOSE ${VALVE_PORT}
+
+# Start Valve app
+ENTRYPOINT valve -f /api/plumber.R -h $VALVE_HOST -p $VALVE_PORT -w 5 -n 5 --check-unused 10 --max-age 300</code></pre>
+<p>At the end of this article, is the complete Dockerfile.</p>
+</div>
+</div>
 <div class="section level2">
-<h2 id="example-dockerfile">Example <code>Dockerfile</code><a class="anchor" aria-label="anchor" href="#example-dockerfile"></a>
+<h2 id="using-rhubr-minimal">Using <code>rhub/r-minimal</code><a class="anchor" aria-label="anchor" href="#using-rhubr-minimal"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; FROM rocker/r-ver:4.3.0</span></span>
-<span><span class="co">#&gt; ENV RENV_CONFIG_REPOS_OVERRIDE https://packagemanager.rstudio.com/cran/latest</span></span>
+<p>The <code>r-minimal</code> base image is extraordinarily small and is
+very powerful. If you are new to Docker and know little about linux, I
+would not recommend this approach as it does have some <a href="https://github.com/r-hub/r-minimal#limitations" class="external-link">limitations</a>
+such as no PNG, Java, or X11 support among others. If, however, you have
+code with dependencies that do not need these, or you want to go fast,
+this is the approach for you.</p>
+<p>Additionally, R packages should be installed using the small CLI tool
+that is included in the base image <code>installr</code>.
+<code>installr</code> uses <a href="https://github.com/r-lib/pak" class="external-link"><code>{pak}</code></a> to install
+packages rather than <code>renv</code>. View the <a href="https://github.com/r-hub/r-minimal" class="external-link">github repo</a> for more on
+how the CLI works. One downside of this is that R packages are built
+from source which drastically slows down build time.</p>
+<p>The approach to building the Dockerfile is very similar to the
+<code>r-ver</code> image. First we specify the builder and install
+valve, then specify our base image as <code>rhub/r-minimal:4.3.0</code>.
+After that, we copy over the valve binary, install our system
+dependencies, R packages, and then configure the
+<code>ENTRYPOINT</code>.</p>
+<pre class="docker"><code>FROM rust:1.71.1-alpine AS builder
+RUN apk add musl-dev
+RUN cargo install valve-rs --no-default-features
+
+FROM rhub/r-minimal:4.3.1
+
+# Copy the binary from the builder stage
+COPY --from=builder /usr/local/cargo/bin/valve /usr/local/bin/
+
+# Install additional packages and perform other setup steps
+RUN apk add --no-cache --update-cache \
+        --repository http://nl.alpinelinux.org/alpine/v3.11/main \
+        autoconf=2.69-r2 \
+        automake=1.16.1-r0 &amp;&amp; \
+    installr -d \
+        -t "libsodium-dev curl-dev linux-headers autoconf automake" \
+        -a libsodium \
+        plumber
+
+EXPOSE 8000
+COPY plumber.R /api/plumber.R
+
+# Start Valve app
+ENTRYPOINT valve -f /api/plumber.R -h 0.0.0.0 -p 8000 --workers 10 --n-max 10 --check-unused 10 --max-age 300</code></pre>
+</div>
+<div class="section level2">
+<h2 id="complete-rhubr-ver-dockerfile">Complete <code>rhub/r-ver</code> <code>Dockerfile</code><a class="anchor" aria-label="anchor" href="#complete-rhubr-ver-dockerfile"></a>
+</h2>
+<pre><code><span><span class="co">#&gt; # stage 1: install valve</span></span>
+<span><span class="co">#&gt; FROM rust:slim AS builder</span></span>
+<span><span class="co">#&gt; RUN cargo install valve-rs --no-default-features</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; # stage 2: configure the container to run plumber</span></span>
+<span><span class="co">#&gt; FROM rocker/r-ver:4.3.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ENV VALVE_HOST 0.0.0.0</span></span>
 <span><span class="co">#&gt; ENV VALVE_PORT 8000</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; # always use RSPM </span></span>
+<span><span class="co">#&gt; ENV RENV_CONFIG_REPOS_OVERRIDE https://packagemanager.rstudio.com/cran/latest</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; RUN apt-get update -qq &amp;&amp; apt-get install -y --no-install-recommends \</span></span>
 <span><span class="co">#&gt;   libcurl4-openssl-dev \</span></span>
@@ -139,16 +267,10 @@ for more on how these arguments work.</p>
 <span><span class="co">#&gt; RUN Rscript -e "renv::restore()"</span></span>
 <span><span class="co">#&gt; COPY plumber.R /api/plumber.R</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; # Install Rust toolchain &amp; add to the path</span></span>
-<span><span class="co">#&gt; RUN apt-get install -y -q \</span></span>
-<span><span class="co">#&gt;     build-essential \</span></span>
-<span><span class="co">#&gt;     curl</span></span>
-<span><span class="co">#&gt; RUN curl https://sh.rustup.rs -sSf | sh -s -- -y</span></span>
-<span><span class="co">#&gt; ENV PATH="/root/.cargo/bin:${PATH}"</span></span>
+<span><span class="co">#&gt; # get binary from builder </span></span>
+<span><span class="co">#&gt; COPY --from=builder /usr/local/cargo/bin/valve /usr/local/bin/</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; # Install Valve binary from Github</span></span>
-<span><span class="co">#&gt; RUN cargo install valve-rs --no-default-features</span></span>
-<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; # open the port for valve</span></span>
 <span><span class="co">#&gt; EXPOSE ${VALVE_PORT}</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; # Start Valve app</span></span>
@@ -164,7 +286,48 @@ Ensure Docker desktop is open. Then build the container with
 container with:</p>
 <pre class="shell"><code>docker run -p 8000:8000 valve:latest</code></pre>
 </div>
-  </main>
+<div class="section level2">
+<h2 id="addenda">Addenda<a class="anchor" aria-label="anchor" href="#addenda"></a>
+</h2>
+<div class="section level3">
+<h3 id="determining-system-dependencies">Determining System Dependencies<a class="anchor" aria-label="anchor" href="#determining-system-dependencies"></a>
+</h3>
+<p>One of the challenges in building Docker images is knowing what
+system dependencies you need to include in your build. The easiest and
+interactive way to determine what dependencies you need in your build is
+to visit <a href="https://packagemanager.posit.co/client/#/repos/2/" class="external-link">Posit Package
+Manager</a>. For each package you can scroll down to
+<code>Install System Prerequisites on {Distro}</code> section.</p>
+<p><img src="docker-images/ppm-sf-deps.png"></p>
+<p>This enumerates all of the system dependencies that you need to
+install on your machine before the package can be installed. The
+instructions show one install command per dependency but it can
+typically be simplified into a single command by separating the
+libraries with a space. For example installing the first few deps can be
+simplified as:</p>
+<pre class="shell"><code>apt-get install -y libssl-dev libudunits2-dev libgdal-dev</code></pre>
+<p>Alternatively, if you want to do this more programmatically, you can
+do so using <code>pak</code> which is honestly the way that I prefer to
+do it!</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="http://pak.r-lib.org/reference/local_system_requirements.html" class="external-link">pkg_system_requirements</a></span><span class="op">(</span><span class="st">"sf"</span>, <span class="st">"ubuntu"</span>, <span class="st">"22.04"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "apt-get install -y libudunits2-dev libssl-dev libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev"</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="a-note-on-number-of-workers">A note on number of workers<a class="anchor" aria-label="anchor" href="#a-note-on-number-of-workers"></a>
+</h3>
+<p>It is pretty tough to estimate the total number of worker threads
+available on a system. Right now, there is no check in place to see if
+your number of workers and connections exceeds the total number of
+threads available. If it does, there is a chance that calls to your
+Valve app may error out since there is thread contention. In general,
+its a good idea to only ask for what you need. For the smallest
+DigitalOcean compute, you should not exceed 3 workers and connections.
+Consult docs to see how many threads are available.</p>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
