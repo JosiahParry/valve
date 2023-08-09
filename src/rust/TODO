@@ -3,3 +3,5 @@ TODO
 - create end point that lists all plumber ports / paths
 - options for verbosity of R processes
 - add tests for pre-release
+- add logging 
+- add a check to see if the number of threads available are 2 + n workers + n conns

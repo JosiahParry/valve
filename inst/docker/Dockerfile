@@ -1,8 +1,15 @@
+# stage 1: install valve
+FROM rust:slim AS builder
+RUN cargo install valve-rs --no-default-features
+
+# stage 2: configure the container to run plumber
 FROM rocker/r-ver:4.3.0
-ENV RENV_CONFIG_REPOS_OVERRIDE https://packagemanager.rstudio.com/cran/latest
 
 ENV VALVE_HOST 0.0.0.0
 ENV VALVE_PORT 8000
+
+# always use RSPM 
+ENV RENV_CONFIG_REPOS_OVERRIDE https://packagemanager.rstudio.com/cran/latest
 
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   libcurl4-openssl-dev \
@@ -18,16 +25,10 @@ RUN Rscript -e "install.packages('renv')"
 RUN Rscript -e "renv::restore()"
 COPY plumber.R /api/plumber.R
 
-# Install Rust toolchain & add to the path
-RUN apt-get install -y -q \
-    build-essential \
-    curl
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+# get binary from builder 
+COPY --from=builder /usr/local/cargo/bin/valve /usr/local/bin/
 
-# Install Valve binary from Github
-RUN cargo install valve-rs --no-default-features
-
+# open the port for valve
 EXPOSE ${VALVE_PORT}
 
 # Start Valve app

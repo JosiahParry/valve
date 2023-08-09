@@ -13,6 +13,8 @@ use std::{net::TcpListener, sync::Arc};
 use deadpool::managed;
 type Pool = managed::Pool<PrManager>;
 
+
+
 pub async fn valve_start(
     filepath: String,
     host: String,
@@ -22,6 +24,7 @@ pub async fn valve_start(
     check_interval: i32,
     max_age: i32,
 ) {
+
     // determines how often to check connects
     let interval = Duration::from_secs(check_interval.try_into().unwrap());
     // determines how old a connection can be before being killed
@@ -45,8 +48,9 @@ pub async fn valve_start(
         .max_size(n_max)
         .build()
         .unwrap();
-    
-    // spawn the first connection before we create the app? 
+
+
+    // spawn the first connection before we create the app
     let _ = pool.get().await.unwrap();
 
 
@@ -56,6 +60,8 @@ pub async fn valve_start(
         .route("/*key", axum::routing::any(plumber_handler))
         .with_state(c)
         .layer(Extension(pool.clone()));
+
+
 
     // This thread is used to check if there are expired threads
     tokio::spawn(async move {
@@ -67,11 +73,12 @@ pub async fn valve_start(
             // if pool is greater than the minimum size, do a prune check
             if n > n_min {
                 pool.retain(|pr, metrics| {
-                    let too_old = metrics.last_used() < max_age;
-                    if !too_old {
+                    let keep = metrics.last_used() < max_age;
+                    if !keep {
                         println!("Killing plumber API at {}:{}", pr.host, pr.port);
                     }
-                    too_old
+
+                    keep
                 });
             } 
         }

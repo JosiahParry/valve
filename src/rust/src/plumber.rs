@@ -71,6 +71,7 @@ impl Plumber {
         // can the scheme figured out from the pr_host?
         uri.scheme = Some("http".parse().unwrap());
         *req.uri_mut() = Uri::from_parts(uri).unwrap();
+        // TODO enable retry
         client.request(req).await.unwrap().into_response()
     }
 }

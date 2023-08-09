@@ -1,7 +1,7 @@
 # Test sleep endpoints
 ---
 concurrency: 10
-base: 'http://localhost:3000'
+base: 'https://plankton-app-ozvgy.ondigitalocean.app'
 iterations: 100
 rampup: 2
 
