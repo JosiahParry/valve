@@ -22,13 +22,12 @@ path = "src/main.rs"
 [dependencies]
 argh = "0.1.10"
 axum = { version = "0.6.18", features = ["tokio"]}
-hyper = { version = "0.14.26", features = ["client"] } 
+hyper = { version = "0.14.26", features = ["client"] }
 rand = "0.8.5"
 tokio = { version = "1.28.1", features = ["io-util", "macros", "rt-multi-thread", "signal"] }
 extendr-api = {version = '0.4.0', optional = true }
 deadpool = "0.9.5"
 async-trait = "0.1.68"
-num_cpus = "1.16.0"
 
 [features]
 default = ["rlib"]

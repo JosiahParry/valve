@@ -668,7 +668,6 @@ dependencies = [
  "deadpool",
  "extendr-api",
  "hyper",
- "num_cpus",
  "rand",
  "tokio",
 ]
