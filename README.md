@@ -5,7 +5,7 @@
 
 Watch the video! 
 
-<img src="vignettes/articles/images/valve-cover.png" width="50%"/>
+<a href="https://www.youtube.com/watch?v=11FM-dxxi3M"><img src="vignettes/articles/images/valve-cover.png" width="50%"/></a>
 
 
 `valve` creates multi-threaded [Plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks. Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
