@@ -2,6 +2,12 @@
 
 > _Redirects your plumbing for you._
 
+
+Watch the video! 
+
+![](vignettes/articles/images/valve-cover.png){width="50%"}
+
+
 `valve` creates multi-threaded [Plumber APIs](https://www.rplumber.io/) powered by Rust's [tokio](https://github.com/tokio-rs/tokio) and [axum](https://github.com/tokio-rs/axum) web frameworks. Plumber connections are automatically spawned, pooled, and terminated using [deadpool](https://docs.rs/deadpool/). App connections are automatically pooled by [hyper](https://docs.rs/hyper/latest/hyper/client/index.html).
 
 Valve is a Rust CLI with an accompanying R package. Running Valve from an R session will block the session. If you are comfortable, it is recommended to install the cli so you can run Valve from your terminal so that you can call the plumber APIs from your R session.
