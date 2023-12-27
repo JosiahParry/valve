@@ -111,7 +111,7 @@ a worker waiting for a plumber API connection to free up before it can be used.
 
 ## Example: Calling valve with multiple workers
 
-The way valve works is by accepting requests on a main port (3000 by default) and then distributing the requests round robin to the plumber APIs that are spawned on random ports. Requests are captured by `axum` and proxied to a plumber API process.
+The way valve works is by accepting requests on a main port (3000 by default) and then distributing the requests to a plumber API connection pool. Requests are captured by `axum` and proxied to a plumber API process.
 
 You can run the example plumber API included with Valve in the background in R using this code chunk:
 
