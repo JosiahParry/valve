@@ -32,3 +32,8 @@ async-trait = "0.1.74"
 [features]
 default = ["rlib"]
 rlib = ["dep:extendr-api"]
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
