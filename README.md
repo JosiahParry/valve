@@ -188,7 +188,7 @@ In the former each worker gets to make the request in approximately the same amo
 
 The architecture, at a high level, is captured by this diagram. 
 
-<img src="man/figures/valve-diagram.png" style="background-color:red;"/>
+<img src="man/figures/valve-diagram.png" style="background-color:red;padding:5px;"/>
 
 There are really three key components to this: 
 
